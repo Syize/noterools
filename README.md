@@ -14,6 +14,8 @@ Thanks to [gwyn-hopkins](https://forums.zotero.org/discussion/comment/418013/#Co
 
 **This script can only work in Windows.**
 
+**See [issue#1](https://github.com/Syize/link-zotero-citation-bibliography/issues/1).**
+
 ### Download the script
 
 Only [link-zotero-citation-bibliography.py](link-zotero-citation-bibliography.py) is needed. Files end with `.pyi` is the file I use to trick PyCharm (because I update this code under Linux).
