@@ -1,37 +1,29 @@
 # Create hyperlinks from citations to bibliographies for Zotero
 
+<p align="center">English | <a href="README_CN.md">中文文档</a></p>
+
 This Python script can add hyperlinks from Zotero's citations to bibliographies, so you can jump from citation to its bibliography like normal cross-reference.
 
 ## How does it work?
 
-Thanks to [gwyn-hopkins](https://forums.zotero.org/discussion/comment/418013/#Comment_418013)'s VBA script, I implement the same function with Python.
-
 - This script scans all bibliographies and adds unique bookmarks for each one.
 - This script scans all citations and sets corresponding hyperlink to the bookmark.
-- This script can also set color of the citation for you :).
+- This script can also set font color and underline style of the citation for you :).
 
 ## Important Note
 
 - **This script can only work in Windows.**
-- **See [issue#1](https://github.com/Syize/link-zotero-citation-bibliography/issues/1).**
-- **I have added a logger to print citations to which this script can't add hyperlink. You can add them manually.**
+- **Numbered citation format hasn't been tested.**
 
 ## How to use?
 
-### Download the script
-
-Only [link-zotero-citation-bibliography.py](link-zotero-citation-bibliography.py) is needed. Files end with `.pyi` is the file I use to trick PyCharm (because I update this code under Linux).
-
-You can clone this repo or just download [link-zotero-citation-bibliography.py](link-zotero-citation-bibliography.py).
-
-### Install dependencies
-
-Use your favorite Python package manager to install:
-
-- pywin32
-- rich
-
-### Modify and run
-
-1. Change the `word_file_path` and `new_file_path` in script, an absolute path is recommended.
-2. Run the script.
+1. Clone this repo.
+2. Install following dependencies:
+   - pywin32
+   - pyzotero
+   - rich
+3. Modify the `main.py`:
+   - `zotero_id` and `zotero_api_key` will be used to connect to Zotero. Check the documentation of [pyzotero](https://pyzotero.readthedocs.io/en/latest/index.html) to know how to get your ID and API key.
+   - `word_file_path` is the absolute path of your Word document.
+   - `new_file_path` is the absolute save path of the new Word document.
+4. Run `main.py`.
