@@ -1,10 +1,20 @@
+import logging
 import re
 from json import loads
-
-from rich.progress import Progress
+from os.path import exists, basename, dirname
+from shutil import move
 
 import pywintypes
+from rich.logging import RichHandler
+from rich.progress import Progress
 from win32com.client import Dispatch
+
+logger = logging.getLogger("ZoteroCitation")
+formatter = logging.Formatter("%(name)s :: %(message)s", datefmt="%m-%d %H:%M:%S")
+handler = RichHandler()
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 
 class ZoteroCitationError(Exception):
@@ -67,7 +77,7 @@ def get_authors_string(text: str, year_str: str) -> str:
     return text
 
 
-def create_bookmarks_for_zotero_literature(docx_obj, isNumbered=False):
+def create_bookmarks_for_zotero_literature(docx_obj, isNumbered=False) -> list[str]:
     """
     Parse Zotero bibliographies, add bookmark for each reference.
 
@@ -75,10 +85,11 @@ def create_bookmarks_for_zotero_literature(docx_obj, isNumbered=False):
     :type docx_obj:
     :param isNumbered: If the citation format is numbered.
     :type isNumbered: bool
-    :return:
-    :rtype:
+    :return: Bookmarks list.
+    :rtype: list
     """
     total = len(list(docx_obj.Fields))
+    bookmarks_list = []
 
     with Progress() as progress:
         pid = progress.add_task(f"[red]Adding bookmarks..[red]", total=total)
@@ -121,10 +132,13 @@ def create_bookmarks_for_zotero_literature(docx_obj, isNumbered=False):
                     bmRange.MoveEnd(1, -1)
                     try:
                         docx_obj.Bookmarks.Add(Name=bmtext, Range=bmRange)
+                        bookmarks_list.append(bmtext)
                     except pywintypes.com_error:
                         print(f"Cannot add bookmarks: {bmtext}")
                         raise ZoteroCitationError
                     bmRange.Collapse(0)
+
+    return bookmarks_list
 
 
 def _generate_bookmark_id(authors_list: list[dict[str, str]], etal_text: str, citation_year: str, etal_number: int = None, is_cn_language=False) -> str:
@@ -161,7 +175,9 @@ def _generate_bookmark_id(authors_list: list[dict[str, str]], etal_text: str, ci
                 _author_given = _author["given"]
                 if "-" in _author_given:
                     _author_given_list = _author_given.split("-")
-                    _author_given_list = [x[0].upper() for x in _author_given_list]
+                    _author_given_list = [
+                        x[0].upper() if 65 <= ord(x[0]) <= 90 or 97 <= ord(x[0]) <= 122 else x for x in _author_given_list
+                    ]
                     _author_given = "".join(_author_given_list)
                 else:
                     _author_given = _author["given"][0].upper()
@@ -179,7 +195,66 @@ def _generate_bookmark_id(authors_list: list[dict[str, str]], etal_text: str, ci
     return bmtext
 
 
-def create_hyperlinks_to_literature_bookmarks(docx_obj, isNumbered=False, setColor: int = None, etal_number: int = None):
+def _check_bookmark_id(
+        bookmark_id: str, bookmarks_list: list[str], authors_list: list[dict[str, str]] = None, citation_year: str = None,
+        is_cn_language=False
+) -> str:
+    """
+    Check if ``bookmark_id`` is correct, and correct ``bookmark_id`` if it's wrong.
+
+    :param bookmark_id: Generated bookmark_id.
+    :type bookmark_id: str
+    :param bookmarks_list: Bookmarks list from ``create_bookmarks_for_zotero_literature``.
+    :type bookmarks_list: list
+    :param authors_list: Authors list.
+    :type authors_list: list
+    :param citation_year: Citation year string.
+    :type citation_year: str
+    :param is_cn_language: If the language of paper is Chinese.
+    :type is_cn_language: bool
+    :return: Corrected ``bookmark_id``.
+    :rtype: str
+    """
+    if bookmark_id in bookmarks_list:
+        return bookmark_id
+    else:
+        if authors_list is None or citation_year is None or bookmarks_list is None:
+            return ""
+
+        for _bookmark in bookmarks_list:
+            is_that_bookmark = True
+
+            if citation_year not in _bookmark:
+                is_that_bookmark = False
+
+            else:
+                if len(authors_list) < 1:
+                    is_that_bookmark = False
+
+                else:
+                    for _author in authors_list:
+                        if "family" not in _author:
+                            author_name = _author["literal"].replace(" ", "")
+                        else:
+                            if is_cn_language:
+                                author_name= _author["family"] + _author["given"].replace(" ", "")
+                            else:
+                                author_name = _author["family"]
+
+                        if author_name not in _bookmark:
+                            is_that_bookmark = False
+                            break
+
+            if is_that_bookmark:
+                return _bookmark
+
+        return ""
+
+
+def create_hyperlinks_to_literature_bookmarks(
+        docx_obj, isNumbered=False, setColor: int = None, etal_number: int = None,
+        noUnderLine=True, bookmarks_list: list[str] = None
+):
     """
     Add hyperlinks to corresponding bookmarks.
 
@@ -191,6 +266,9 @@ def create_hyperlinks_to_literature_bookmarks(docx_obj, isNumbered=False, setCol
     :type setColor: int
     :param etal_number: The number of authors when using "et al." to represent the rest of authors.
     :type etal_number: int | None
+    :param noUnderLine: If remove the underline of the hyperlink.
+    :type noUnderLine: bool
+    :param bookmarks_list: Bookmarks list which will be used to help add hyperlinks.
     :return:
     :rtype:
     """
@@ -225,6 +303,10 @@ def create_hyperlinks_to_literature_bookmarks(docx_obj, isNumbered=False, setCol
                         bmtext = f"Ref_{oRange.Text}"
                         docx_obj.Hyperlinks.Add(Anchor=oRange, Address="", SubAddress=bmtext, ScreenTip="",
                                                 TextToDisplay="")
+
+                        if noUnderLine:
+                            oRange.Font.Underline = 0
+
                         oRange.Collapse(0)
 
                 else:
@@ -262,9 +344,23 @@ def create_hyperlinks_to_literature_bookmarks(docx_obj, isNumbered=False, setCol
                                         is_cn_language = True
 
                                 bmtext = _generate_bookmark_id(authors_list, etal_text, citation_year, etal_number, is_cn_language)
+                                corrected_bmtext = _check_bookmark_id(bmtext, bookmarks_list, authors_list, citation_year, is_cn_language)
 
-                                docx_obj.Hyperlinks.Add(Anchor=oRange, Address="", SubAddress=bmtext, ScreenTip="",
-                                                        TextToDisplay="")
+                                if corrected_bmtext == "":
+                                    text = oRange.Text
+                                    oRange.MoveStart(Unit=1, Count=-20)
+                                    oRange.MoveEnd(Unit=1, Count=20)
+                                    logger.warning(f"Can't set hyperlinks for [{text}] in {oRange.Text}")
+                                    logger.warning(f"Generated bookmark is {bmtext}")
+                                    oRange.MoveStart(Unit=1, Count=20)
+                                    oRange.MoveEnd(Unit=1, Count=-20)
+                                else:
+                                    docx_obj.Hyperlinks.Add(Anchor=oRange, Address="", SubAddress=corrected_bmtext, ScreenTip="",
+                                                            TextToDisplay="")
+
+                                if noUnderLine:
+                                    oRange.Font.Underline = 0
+
                                 oRange.Collapse(0)
 
 
@@ -273,14 +369,22 @@ if __name__ == '__main__':
     new_file_path = r""
     error_flag = False
 
+    # check file
+    if exists(new_file_path):
+        file_basename = basename(new_file_path)
+        dir_path = dirname(new_file_path)
+        backup_file_name = file_basename.strip(".docx") + "_bak.docx"
+        move(new_file_path, rf"{dir_path}\{backup_file_name}")
+        logger.warning(rf"Found existed output file, backup to {dir_path}\{backup_file_name}")
+
     # open word
     word = Dispatch("Word.Application")
     word.Visible = False
     docx = word.Documents.Open(word_file_path)
 
     try:
-        create_bookmarks_for_zotero_literature(docx)
-        create_hyperlinks_to_literature_bookmarks(docx, setColor=16711680, etal_number=3)
+        bookmarks_list = create_bookmarks_for_zotero_literature(docx)
+        create_hyperlinks_to_literature_bookmarks(docx, setColor=16711680, etal_number=3, bookmarks_list=bookmarks_list)
     except ZoteroCitationError:
         error_flag = True
 

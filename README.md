@@ -10,11 +10,13 @@ Thanks to [gwyn-hopkins](https://forums.zotero.org/discussion/comment/418013/#Co
 - This script scans all citations and sets corresponding hyperlink to the bookmark.
 - This script can also set color of the citation for you :).
 
+## Important Note
+
+- **This script can only work in Windows.**
+- **See [issue#1](https://github.com/Syize/link-zotero-citation-bibliography/issues/1).**
+- **I have added a logger to print citations to which this script can't add hyperlink. You can add them manually.**
+
 ## How to use?
-
-**This script can only work in Windows.**
-
-**See [issue#1](https://github.com/Syize/link-zotero-citation-bibliography/issues/1).**
 
 ### Download the script
 
