@@ -25,7 +25,7 @@ def get_citations_info(docx_obj) -> dict[str, dict[str, str]]:
     total = len(list(docx_obj.Fields))
 
     with Progress() as progress:
-        pid = progress.add_task(f"[red]Collecting titles, publishers, authors and itemKeys for citations..[red]", total=total)
+        pid = progress.add_task(f"[red]Collecting titles, container-titles, authors and itemKeys for citations..[red]", total=total)
 
         for field in docx_obj.Fields:
             progress.advance(pid, advance=1)
@@ -43,10 +43,24 @@ def get_citations_info(docx_obj) -> dict[str, dict[str, str]]:
                     item_key = basename(_citation["uris"][0])
                     title = _citation["itemData"]["title"]
 
+                    if "container-title" in _citation["itemData"]:
+                        container_title = _citation["itemData"]["container-title"]
+                    else:
+                        container_title = ""
+
                     if "publisher" in _citation["itemData"]:
                         publisher = _citation["itemData"]["publisher"]
                     else:
                         publisher = ""
+
+                    if "language" not in _citation["itemData"]:
+                        language = "cn"
+                    else:
+                        language = _citation["itemData"]["language"]
+                        if "en" not in language.lower():
+                            language = "cn"
+                        else:
+                            language = "en"
 
                     author = _citation["itemData"]["author"][0]
                     if "family" in author:
@@ -57,8 +71,10 @@ def get_citations_info(docx_obj) -> dict[str, dict[str, str]]:
                     if title not in titles_item_keys:
                         titles_item_keys[title] = {
                             "item_key": item_key,
-                            "publisher": publisher,
+                            "container_title": container_title,
                             "author": author,
+                            "publisher": publisher,
+                            "language": language,
                         }
 
     return titles_item_keys

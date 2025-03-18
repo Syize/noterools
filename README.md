@@ -8,7 +8,7 @@ This Python script can add hyperlinks from Zotero's citations to bibliographies,
 
 - This script scans all bibliographies and adds unique bookmarks for each one.
 - This script scans all citations and sets corresponding hyperlink to the bookmark.
-- This script can also set font color and underline style of the citation for you :).
+- This script can also set font color and underline style of the citation, italic font of the bibliography for you :).
 
 ## Important Note
 
@@ -18,7 +18,7 @@ This Python script can add hyperlinks from Zotero's citations to bibliographies,
 ## How to use?
 
 1. Clone this repo.
-2. Install following dependencies:
+2. Install the following dependencies:
    - pywin32
    - pyzotero
    - rich
@@ -29,4 +29,5 @@ This Python script can add hyperlinks from Zotero's citations to bibliographies,
    - `isNumbered` is a bool value to tell the script is the citation format is numbered.
    - `setColor` is an integer of the font color. You can get other colors value from [VBA documentations](https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor). Default is blue.
    - `noUnderLine` is a bool value to tell the script whether to remove the underline of hyperlinks.
+   - `set_container_title_italic` is a bool value to tell the script to set italic publisher and container title. Currently, Zotero has a problem setting italic font for Chinese, Korea or Japanese font. **This function is tested with Chinese paper only.**
 4. Run `main.py`.
