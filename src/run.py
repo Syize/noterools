@@ -11,7 +11,7 @@ from .utils import logger
 from .zotero import init_zotero_client
 
 
-def run(word_file_path: str, new_file_path: str, zotero_id: str, zotero_api_key: str):
+def run(word_file_path: str, new_file_path: str, zotero_id: str, zotero_api_key: str, isNumbered=False, setColor: int = None, noUnderLine=True):
     """
     Main entry.
 
@@ -19,11 +19,14 @@ def run(word_file_path: str, new_file_path: str, zotero_id: str, zotero_api_key:
     :param new_file_path: Absolute save path of the new Word document. Existed file will be renamed.
     :param zotero_id: You Zotero ID to connect to Zotero.
     :param zotero_api_key: You Zotero API key to connect to Zotero.
+    :param isNumbered: If the citation format is numbered.
+    :param setColor: Set font color. You can look up the value at `VBA Documentation <https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor>`_.
+    :param noUnderLine: If remove the underline of the hyperlink.
     :return:
     """
     error_flag = False
 
-    # check file
+    # check the file
     if exists(new_file_path):
         file_basename = basename(new_file_path)
         dir_path = dirname(new_file_path)
@@ -40,8 +43,8 @@ def run(word_file_path: str, new_file_path: str, zotero_id: str, zotero_api_key:
     sleep(1)
 
     try:
-        add_bookmarks_to_bibliography(docx)
-        add_hyperlinks_to_citations(docx)
+        add_bookmarks_to_bibliography(docx, isNumbered=isNumbered)
+        add_hyperlinks_to_citations(docx, isNumbered=isNumbered, setColor=setColor, noUnderLine=noUnderLine)
     except (ZoteroCitationError, KeyboardInterrupt):
         error_flag = True
 

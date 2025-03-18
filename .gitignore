@@ -1,2 +1,5 @@
 test/
 .idea/
+
+pywintypes/
+win32com/

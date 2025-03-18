@@ -26,4 +26,7 @@ This Python script can add hyperlinks from Zotero's citations to bibliographies,
    - `zotero_id` and `zotero_api_key` will be used to connect to Zotero. Check the documentation of [pyzotero](https://pyzotero.readthedocs.io/en/latest/index.html) to know how to get your ID and API key.
    - `word_file_path` is the absolute path of your Word document.
    - `new_file_path` is the absolute save path of the new Word document.
+   - `isNumbered` is a bool value to tell the script is the citation format is numbered.
+   - `setColor` is an integer of the font color. You can get other colors value from [VBA documentations](https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor). Default is blue.
+   - `noUnderLine` is a bool value to tell the script whether to remove the underline of hyperlinks.
 4. Run `main.py`.

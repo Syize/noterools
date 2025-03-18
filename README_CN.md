@@ -20,7 +20,10 @@ Zotero插入的引用和参考文献表不能像正常的交叉引用一样跳�
    - pyzotero
    - rich
 3. 修改`main.py`：
-   - `zotero_id`和`zotero_api_key`被用于与Zotero通信，获取方式请查看[pyzotero](https://pyzotero.readthedocs.io/en/latest/index.html)的手册
-   - `word_file_path`是你的Word文档的绝对路径
-   - `new_file_path`是新保存的文档的绝对路径
+   - `zotero_id`和`zotero_api_key`被用于与Zotero通信，获取方式请查看[pyzotero](https://pyzotero.readthedocs.io/en/latest/index.html)的手册。
+   - `word_file_path`是你的Word文档的绝对路径。
+   - `new_file_path`是新保存的文档的绝对路径。
+   - `isNumbered`是布尔值，代表你的引用格式是否为顺序引用。
+   - `setColor`是代表字体颜色的整数值。你可以查阅[VBA的文档](https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor)获得其他颜色对应的值。默认是蓝色。
+   - `noUnderLine`是布尔值，代表是否去除超链接的下划线。
 4. 运行`main.py`

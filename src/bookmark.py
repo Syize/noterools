@@ -72,7 +72,7 @@ def add_bookmarks_to_bibliography(docx_obj, isNumbered=False):
                 bmRange.MoveEnd(1, -1)
                 try:
                     docx_obj.Bookmarks.Add(Name=bmtext, Range=bmRange)
-                except pywintypes.com_error:
+                except pywintypes.com_error:    # type: ignore
                     logger.error(f"Cannot add bookmarks: {bmtext}")
                     raise ZoteroCitationError
                 bmRange.Collapse(0)

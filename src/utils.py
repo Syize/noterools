@@ -73,7 +73,7 @@ def replace_invalid_char(text: str) -> str:
     :return: Text in which all invalid characters have been replaced.
     :rtype: str
     """
-    string_list = [":", ";", ".", ",", "：", "；", "。", "，", "'", "’", " ", "-", "/"]
+    string_list = [":", ";", ".", ",", "：", "；", "。", "，", "'", "’", " ", "-", "/", "(", ")", "（", "）"]
     for s in string_list:
         text = text.replace(s, "")
 
@@ -90,7 +90,7 @@ def get_year_list(text: str) -> list[str]:
     :return: Year string list.
     :rtype: list
     """
-    pattern = r'\b(19\d{2}|20\d{2})\b'
+    pattern = r'\b\d{4}[a-z]?\b'
     return re.findall(pattern, text)
 
 
