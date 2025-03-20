@@ -1,0 +1,25 @@
+[build-system]
+build-backend = "mesonpy"
+requires = ["meson-python"]
+
+[project]
+name = "zoterools"
+version = "0.1.0"
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+requires-python = '>=3.10'
+authors = [{name = "Syize", email = "syizeliu@gmail.com"}]
+maintainers = [
+    { name = "Syize", email = "syizeliu@gmail.com" },
+]
+keywords = [ "Zotero", ]
+description = "Create hyperlinks from citations to bibliographies for Zotero"
+dependencies = ["pywin32", "pyzotero", "rich"]
+
+[project.urls]
+homepage = "https://github.com/Syize/link-zotero-citation-bibliography"
+repository = "https://github.com/Syize/link-zotero-citation-bibliography"
+"Bug Tracker" = "https://github.com/Syize/link-zotero-citation-bibliography/issues"
+
+[tool.poetry]
+readme = "README.md"
