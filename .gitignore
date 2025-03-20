@@ -3,3 +3,4 @@ test/
 
 pywintypes/
 win32com/
+**/__pycache__/
