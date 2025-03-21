@@ -1,5 +1,5 @@
-from .bookmark import add_bookmarks_to_bibliography
-from .hyperlinks import add_hyperlinks_to_citations
+from .colors import add_cross_ref_style_hook
+from .hyperlinks import add_citation_cross_ref_hook
 from .word import Word
 from .zotero import init_zotero_client
 
@@ -22,8 +22,9 @@ def run(word_file_path: str, new_file_path: str, zotero_id: str, zotero_api_key:
     init_zotero_client(zotero_id, zotero_api_key)
 
     with Word(word_file_path, new_file_path) as word:
-        add_bookmarks_to_bibliography(word, isNumbered=isNumbered, set_container_title_italic=set_container_title_italic)
-        add_hyperlinks_to_citations(word, isNumbered=isNumbered, setColor=setColor, noUnderLine=noUnderLine)
+        add_citation_cross_ref_hook(word, is_numbered=isNumbered, color=setColor, no_under_line=noUnderLine, set_container_title_italic=set_container_title_italic)
+        add_cross_ref_style_hook(word, color=setColor, bold=True, key_word=["图", "表"])
+        word.perform()
 
 
 __all__ = ["run"]

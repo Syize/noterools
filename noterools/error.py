@@ -33,4 +33,11 @@ class ZoteroCitationError(Exception):
     pass
 
 
-__all__ = ["ZoteroCitationError", "NoteroolsBasicError", "AddBookmarkError", "AddHyperlinkError", "ContextError"]
+class HookTypeError(NoteroolsBasicError):
+    """
+    Unknown hook type.
+    """
+    pass
+
+
+__all__ = ["ZoteroCitationError", "NoteroolsBasicError", "AddBookmarkError", "AddHyperlinkError", "ContextError", "HookTypeError"]

@@ -3,11 +3,11 @@ from shutil import move
 from typing import Union
 
 from rich.progress import Progress
+from win32com.client import CDispatch, Dispatch, GetObject
 
 import pywintypes
-from win32com.client import Dispatch, CDispatch, GetObject
-
-from .error import AddBookmarkError, AddHyperlinkError, ContextError
+from .error import AddBookmarkError, AddHyperlinkError, ContextError, HookTypeError
+from .hook import HOOKTYPE, HookBase
 from .utils import logger
 
 
@@ -28,11 +28,17 @@ class Word:
 
         self._context = False
 
+        self._hook_before_dict: dict[str, HookBase] = {}
+        self._hook_in_dict: dict[str, HookBase] = {}
+        self._hook_after_dict: dict[str, HookBase] = {}
+        self._hook_res_dict = {}
+        self._lazy_hook_dict = []
+
     @property
     def fields(self):
         self._check_context()
 
-        return self.word.Fields
+        return self.docx.Fields
 
     def __enter__(self):
         try:
@@ -169,6 +175,121 @@ class Word:
 
         if is_clear:
             self.docx.SaveAs(new_file_path)
+
+    def _set_hook(self, hook: HookBase, hook_type: Union[int, HOOKTYPE]):
+        """
+        Set function hook for Word field.
+
+        :param hook: Hook object.
+        :type hook:
+        :param hook_type: Integer flag. Check ``HOOKTYPE``.
+        :type hook_type: int
+        :return:
+        :rtype:
+        """
+        if hook_type == HOOKTYPE.BEFORE_ITERATE:
+            self._hook_before_dict.update({hook.name: hook})
+        elif hook_type == HOOKTYPE.IN_ITERATE:
+            self._hook_in_dict.update({hook.name: hook})
+        elif hook_type == HOOKTYPE.AFTER_ITERATE:
+            self._hook_after_dict.update({hook.name: hook})
+        else:
+            raise HookTypeError(f"Unknown hook type: {hook_type}.")
+
+    def set_hook(self, hook: HookBase, hook_type: Union[int, HOOKTYPE] = HOOKTYPE.IN_ITERATE):
+        """
+        Set function hook for Word field.
+
+        :param hook: Callback function which first parameter should accept the Word field object.
+        :type hook:
+        :param hook_type: Integer flag. Check ``HOOKTYPE``.
+        :type hook_type: int
+        :return:
+        :rtype:
+        """
+        if hook.name in self._hook_in_dict:
+            logger.warning(f"Hook {hook.name} won't be added because a hook with same name exists.")
+            return
+
+        self._set_hook(hook, hook_type)
+
+    def update_hook(self, hook: HookBase, hook_type: Union[int, HOOKTYPE] = HOOKTYPE.IN_ITERATE):
+        """
+        Update function hook for Word field.
+
+        :param hook: Callback function which first parameter should accept the Word field object.
+        :type hook:
+        :param hook_type: Integer flag. Check ``HOOKTYPE``.
+        :type hook_type: int
+        :return:
+        :rtype:
+        """
+        if hook.name not in self._hook_in_dict:
+            logger.warning(f"Hook {hook.name} doesn't exist.")
+            return
+
+        self._set_hook(hook, hook_type)
+
+    def remove_hook(self, name: str, hook_type: Union[int, HOOKTYPE]):
+        """
+        Remove a hook.
+
+        :param name: A unique name for hook.
+        :type name: str
+        :param hook_type: Integer flag. Check ``HOOKTYPE``.
+        :type hook_type: int
+        :return:
+        :rtype:
+        """
+        if hook_type == HOOKTYPE.BEFORE_ITERATE and name in self._hook_before_dict:
+            _ = self._hook_before_dict.pop(name)
+        elif hook_type == HOOKTYPE.IN_ITERATE and name in self._hook_in_dict:
+            _ = self._hook_in_dict.pop(name)
+        elif hook_type == HOOKTYPE.AFTER_ITERATE and name in self._hook_after_dict:
+            _ = self._hook_after_dict.pop(name)
+        else:
+            raise HookTypeError(f"Unknown hook type: {hook_type}.")
+
+    def before_perform(self):
+        """
+        Call hooks before iterations.
+
+        :return:
+        :rtype:
+        """
+        for name in self._hook_before_dict:
+            self._hook_before_dict[name].before_iterate(self)
+
+    def after_perform(self):
+        """
+        Call hooks after iterations.
+
+        :return:
+        :rtype:
+        """
+        for name in self._hook_after_dict:
+            self._hook_after_dict[name].after_iterate(self)
+
+    def perform(self):
+        """
+        Perform iterations.
+
+        :return:
+        :rtype:
+        """
+        self.before_perform()
+
+        total = len(list(self.docx.Fields))
+        with Progress() as progress:
+            pid = progress.add_task(f"[red]Processing your Word...[red]", total=total)
+
+            for field in self.docx.Fields:
+                progress.advance(pid)
+
+                for name in self._hook_in_dict:
+                    self._hook_in_dict[name].on_iterate(self, field)
+
+        self.after_perform()
 
 
 def loop_word_fields(word_obj: Word, code_key_word: str = None, res_key_word: str = None, show_progress=False, progress_text: str = None, ):
