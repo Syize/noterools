@@ -1,20 +1,19 @@
-import pywintypes
 from rich.progress import Progress
 
-from .error import ZoteroCitationError
-from .utils import logger, get_citations_info
+from .utils import get_citations_info, logger
+from .word import Word
 
 
-def add_bookmarks_to_bibliography(docx_obj, isNumbered=False, set_container_title_italic=True):
+def add_bookmarks_to_bibliography(word_obj: Word, isNumbered=False, set_container_title_italic=True):
     """
     Add bookmarks to bibliographies.
 
-    :param docx_obj: Docx object opened by pywin32.
+    :param word_obj: Word object.
     :param isNumbered: If the citation format is numbered.
     :param set_container_title_italic: If set the container-title and publisher of Chinese paper to Italic.
     :return:
     """
-    title_item_key_dict = get_citations_info(docx_obj)
+    title_item_key_dict = get_citations_info(word_obj)
     title_container_title_tuple = [
         (
             title, title_item_key_dict[title]["container_title"], title_item_key_dict[title]["author"], title_item_key_dict[title]["publisher"],
@@ -24,7 +23,7 @@ def add_bookmarks_to_bibliography(docx_obj, isNumbered=False, set_container_titl
 
     logger.info(f"Find bibliographies in the word, it may take a few seconds...")
     # loop fields in docx
-    for field in docx_obj.Fields:
+    for field in word_obj.fields:
 
         # find ZOTERO field.
         if "ADDIN ZOTERO_BIBL" not in field.Code.Text:
@@ -99,11 +98,7 @@ def add_bookmarks_to_bibliography(docx_obj, isNumbered=False, set_container_titl
                         bmRange.MoveEnd(Unit=1, Count=len(post_paragraph))
 
                 bmRange.MoveEnd(1, -1)
-                try:
-                    docx_obj.Bookmarks.Add(Name=bmtext, Range=bmRange)
-                except pywintypes.com_error:    # type: ignore
-                    logger.error(f"Cannot add bookmarks: {bmtext}")
-                    raise ZoteroCitationError
+                word_obj.add_bookmark(bmtext, bmRange)
                 bmRange.Collapse(0)
 
 

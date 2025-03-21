@@ -1,28 +1,28 @@
 from json import loads
 from os.path import basename
 
-import pywintypes
 from rich.progress import Progress
 
-from .utils import logger, get_year_list, replace_invalid_char
+from .utils import get_year_list, logger, replace_invalid_char
+from .word import Word
 
 
-def add_hyperlinks_to_citations(docx_obj, isNumbered=False, setColor: int = None, noUnderLine=True):
+def add_hyperlinks_to_citations(word_obj: Word, isNumbered=False, setColor: int = None, noUnderLine=True):
     """
     Add hyperlinks to citations.
 
-    :param docx_obj: Docx object opened by pywin32.
+    :param word_obj: Word object.
     :param isNumbered: If the citation format is numbered.
     :param setColor: Set font color. You can look up the value at `VBA Documentation <https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor>`_.
     :param noUnderLine: If remove the underline of the hyperlink.
     :return:
     """
-    total = len(list(docx_obj.Fields))
+    total = len(list(word_obj.fields))
 
     with Progress() as progress:
         pid = progress.add_task(f"[red]Adding hyperlinks..[red]", total=total)
 
-        for field in docx_obj.Fields:
+        for field in word_obj.fields:
 
             progress.advance(pid, advance=1)
 
@@ -47,14 +47,7 @@ def add_hyperlinks_to_citations(docx_obj, isNumbered=False, setColor: int = None
                 # find the number and add hyperlink
                 while oRangeFind.Execute("[0-9]{1,}") and oRange.InRange(field.Result):
                     bmtext = f"Ref_{oRange.Text}"
-                    docx_obj.Hyperlinks.Add(
-                        Anchor=oRange, Address="", SubAddress=bmtext, ScreenTip="",
-                        TextToDisplay=""
-                        )
-
-                    if noUnderLine:
-                        oRange.Font.Underline = 0
-
+                    word_obj.add_hyperlink(bmtext, oRange, no_under_line=noUnderLine)
                     oRange.Collapse(0)
 
             else:
@@ -123,19 +116,7 @@ def add_hyperlinks_to_citations(docx_obj, isNumbered=False, setColor: int = None
                         if res1 or res2 or res3:
                             item_key = basename(_citation["uris"][0])
                             bmtext = f"Ref_{item_key}"
-
-                            try:
-                                docx_obj.Hyperlinks.Add(
-                                    Anchor=oRange, Address="", SubAddress=bmtext,
-                                    ScreenTip="", TextToDisplay=""
-                                    )
-                            except pywintypes.com_error:    # type: ignore
-                                logger.error(f"Cannot add hyperlinks: {bmtext}")
-                                break
-
-                            if noUnderLine:
-                                oRange.Font.Underline = 0
-
+                            word_obj.add_hyperlink(bmtext, oRange, no_under_line=noUnderLine)
                             is_add_hyperlink = True
                             break
 

@@ -5,3 +5,6 @@ dist/
 pywintypes/
 win32com/
 **/__pycache__/
+
+pywintypes.pyi
+test.py
