@@ -3,7 +3,7 @@ build-backend = "mesonpy"
 requires = ["meson-python"]
 
 [project]
-name = "zoterools"
+name = "noterools"
 version = "0.1.0"
 readme = "README.md"
 license = { text = "GPL-3.0-or-later" }
@@ -13,7 +13,7 @@ maintainers = [
     { name = "Syize", email = "syizeliu@gmail.com" },
 ]
 keywords = [ "Zotero", ]
-description = "Create hyperlinks from citations to bibliographies for Zotero"
+description = "Not just zotero tools."
 dependencies = ["pywin32", "pyzotero", "rich"]
 
 [project.urls]

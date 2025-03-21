@@ -6,7 +6,8 @@ py3.install_sources(
         'hyperlinks.py',
         'run.py',
         'utils.py',
+        'word.py',
         'zotero.py',
     ],
-    subdir: 'zoterools'
+    subdir: 'noterools'
 )

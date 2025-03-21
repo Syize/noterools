@@ -1,5 +1,5 @@
 project(
-    'zoterools',
+    'noterools',
     version: '0.1.0',
     license: 'BSD-3',
     meson_version: '>=0.64.0',
@@ -8,4 +8,4 @@ project(
 
 py3 = import('python').find_installation(pure: false)
 
-subdir('zoterools')
+subdir('noterools')
