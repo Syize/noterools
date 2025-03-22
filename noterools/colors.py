@@ -60,22 +60,4 @@ def add_cross_ref_style_hook(word_obj: Word, color: int = None, bold=False, key_
             word_obj.set_hook(CrossRefStyleHook(color, bold, str(_key)))
 
 
-def set_cross_ref_style(field, color: int = None, bold=False):
-    """
-    Set font style of the cross-reference.
-
-    :param field:
-    :type field:
-    :param color:
-    :type color:
-    :param bold:
-    :type bold:
-    :return:
-    :rtype:
-    """
-    range_obj = field.Result
-    range_obj.Font.Color = color
-    range_obj.Font.Bold = bold
-
-
-__all__ = ["add_cross_ref_style_hook", "set_cross_ref_style"]
+__all__ = ["add_cross_ref_style_hook", "CrossRefStyleHook"]

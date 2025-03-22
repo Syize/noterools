@@ -1,33 +1,49 @@
-# Create hyperlinks from citations to bibliographies for Zotero
+# Noterools: Not just Zotero Tools
 
-<p align="center">English | <a href="README_CN.md">中文文档</a></p>
+<p align="center">中文文档 | <a href="README_EN.md">English</a></p>
 
-This Python script can add hyperlinks from Zotero's citations to bibliographies, so you can jump from citation to its bibliography like normal cross-reference.
+一开始我只是想依照[gwyn-hopkins](https://forums.zotero.org/discussion/comment/418013/#Comment_418013)的代码写一份相应的Python实现，用于为Zotero的引用添加可跳转的超链接。但是随着论文的修改，我发现需要对论文的格式做越来越多的设置，代码实现的功能也越来越多。经过大量的重构以后，noterools诞生。
 
-## How does it work?
+## 这是什么?
 
-- This script scans all bibliographies and adds unique bookmarks for each one.
-- This script scans all citations and sets corresponding hyperlink to the bookmark.
-- This script can also set font color and underline style of the citation, italic font of the bibliography for you :).
+目前noterools包含以下功能：
 
-## Important Note
+- 为Zotero参考文献表中的每个文献创建书签
+- 为Zotero的引用设置跳转到相应文献的超链接，并设置超链接是否带下划线
+- 为Zotero的引用设置字体颜色
+- 将Zotero的参考文献表中，不能被正确设置为斜体的期刊名称和出版商设置为斜体
+- 为正文中的交叉引用设置字体颜色和粗细
 
-- **This script can only work in Windows.**
-- **Numbered citation format hasn't been tested.**
+## 效果图
 
-## How to use?
+![引用和参考文献表设置](./pics/noterools1.png)
 
-1. Clone this repo.
-2. Install the following dependencies:
-   - pywin32
-   - pyzotero
-   - rich
-3. Modify the `main.py`:
-   - `zotero_id` and `zotero_api_key` will be used to connect to Zotero. Check the documentation of [pyzotero](https://pyzotero.readthedocs.io/en/latest/index.html) to know how to get your ID and API key.
-   - `word_file_path` is the absolute path of your Word document.
-   - `new_file_path` is the absolute save path of the new Word document.
-   - `isNumbered` is a bool value to tell the script is the citation format is numbered.
-   - `setColor` is an integer of the font color. You can get other colors value from [VBA documentations](https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor). Default is blue.
-   - `noUnderLine` is a bool value to tell the script whether to remove the underline of hyperlinks.
-   - `set_container_title_italic` is a bool value to tell the script to set italic publisher and container title. Currently, Zotero has a problem setting italic font for Chinese, Korea or Japanese font. **This function is tested with Chinese paper only.**
-4. Run `main.py`.
+![交叉引用设置](./pics/noterools2.png)
+
+## 注意
+
+- **该脚本仅能在Windows环境下运行**
+- **顺序引用格式没有被测试过**
+
+## 如何使用
+
+1. 使用pip安装noterools
+```bash
+pip install noterools
+```
+2. 创建一个Python脚本并运行。以下是一个简单的示例
+```python
+from noterools import Word, add_citation_cross_ref_hook, add_cross_ref_style_hook
+
+if __name__ == '__main__':
+    word_file_path = r"E:\Documents\Word\test.docx"
+    new_file_path = r"E:\Documents\Word\test_new.docx"
+
+    with Word(word_file_path, save_path=new_file_path) as word:
+        # 为Zotero的citation添加超链接
+        add_citation_cross_ref_hook(word, is_numbered=False, color=16711680, no_under_line=True, set_container_title_italic=True)
+        # 为正文中以Figure开头的交叉引用设置字体颜色和粗体
+        add_cross_ref_style_hook(word, color=16711680, bold=True, key_word=["Figure"])
+        # 执行操作
+        word.perform()
+```

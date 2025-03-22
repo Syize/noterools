@@ -26,13 +26,6 @@ class AddHyperlinkError(NoteroolsBasicError):
     pass
 
 
-class ZoteroCitationError(Exception):
-    """
-    A custom exception class
-    """
-    pass
-
-
 class HookTypeError(NoteroolsBasicError):
     """
     Unknown hook type.
@@ -40,4 +33,11 @@ class HookTypeError(NoteroolsBasicError):
     pass
 
 
-__all__ = ["ZoteroCitationError", "NoteroolsBasicError", "AddBookmarkError", "AddHyperlinkError", "ContextError", "HookTypeError"]
+class ArticleNotFoundError(NoteroolsBasicError):
+    """
+    Article not found in zotero.
+    """
+    pass
+
+
+__all__ = ["NoteroolsBasicError", "AddBookmarkError", "AddHyperlinkError", "ContextError", "HookTypeError", "ArticleNotFoundError"]

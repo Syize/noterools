@@ -207,7 +207,19 @@ class Word:
         :return:
         :rtype:
         """
-        if hook.name in self._hook_in_dict:
+        if hook_type == HOOKTYPE.BEFORE_ITERATE:
+            _hook_dict = self._hook_before_dict
+
+        elif hook_type == HOOKTYPE.IN_ITERATE:
+            _hook_dict = self._hook_in_dict
+
+        elif hook_type == HOOKTYPE.AFTER_ITERATE:
+            _hook_dict = self._hook_after_dict
+
+        else:
+            raise HookTypeError(f"Unknown hook type: {hook_type}.")
+
+        if hook.name in _hook_dict:
             logger.warning(f"Hook {hook.name} won't be added because a hook with same name exists.")
             return
 
@@ -292,70 +304,4 @@ class Word:
         self.after_perform()
 
 
-def loop_word_fields(word_obj: Word, code_key_word: str = None, res_key_word: str = None, show_progress=False, progress_text: str = None, ):
-    """
-    Loop fields in Word.
-
-    :param word_obj: Word object.
-    :type word_obj: Word
-    :param code_key_word: The key word in field's code which will be used to filter fields.
-    :type code_key_word: str
-    :param res_key_word: The key word in field's result which will be used to filter fields.
-    :type res_key_word: str
-    :param show_progress: If shows a friendly progress bar.
-    :type show_progress: bool
-    :param progress_text: The text of progress bar.
-    :type progress_text: str
-    :return:
-    :rtype:
-    """
-    if show_progress:
-
-        if progress_text is None:
-            progress_text = f"[red]Looping fields in Word...[red]"
-
-        total = len(list(word_obj.fields))
-
-        with Progress() as progress:
-            pid = progress.add_task(progress_text, total=total)
-
-            for field in word_obj.fields:
-                progress.advance(pid, 1)
-
-                condition1 = False
-                condition2 = False
-
-                if code_key_word is None:
-                    condition1 = True
-                elif code_key_word in field.Code.Text:
-                    condition1 = True
-
-                if res_key_word is None:
-                    condition2 = True
-                elif res_key_word in field.Result.Text:
-                    condition2 = True
-
-                if condition1 and condition2:
-                    yield field
-
-    else:
-        for field in word_obj.fields:
-
-            condition1 = False
-            condition2 = False
-
-            if code_key_word is None:
-                condition1 = True
-            elif code_key_word in field.Code.Text:
-                condition1 = True
-
-            if res_key_word is None:
-                condition2 = True
-            elif res_key_word in field.Result.Text:
-                condition2 = True
-
-            if condition1 and condition2:
-                yield field
-
-
-__all__ = ["Word", "loop_word_fields"]
+__all__ = ["Word"]

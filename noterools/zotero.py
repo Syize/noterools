@@ -2,7 +2,7 @@ from typing import Optional
 
 from pyzotero.zotero import Zotero
 
-from .error import ZoteroCitationError
+from .error import ArticleNotFoundError
 from .utils import logger
 
 ZOTERO_CLIENT: Optional[Zotero] = None
@@ -35,7 +35,7 @@ def search_article(itemKey: str) -> dict:
     res = ZOTERO_CLIENT.items(itemKey=itemKey)
     if len(res) == 0:
         logger.error(f"Can't find the article which itemKey is {itemKey}")
-        raise ZoteroCitationError
+        raise ArticleNotFoundError(f"Can't find the article which itemKey is {itemKey}")
 
     elif len(res) > 1:
         logger.warning(f"Find multiple articles which itemKey are same, use the first one")

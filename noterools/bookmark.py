@@ -4,7 +4,7 @@ from os.path import basename
 from rich.progress import Progress
 
 from .hook import HookBase
-from .utils import get_citations_info, logger
+from .utils import logger
 from .word import Word
 
 
@@ -175,102 +175,4 @@ class BibBookmarkHook(HookBase):
                     bmRange.Collapse(0)
 
 
-def add_bookmarks_to_bibliography(word_obj: Word, isNumbered=False, set_container_title_italic=True):
-    """
-    Add bookmarks to bibliographies.
-
-    :param word_obj: Word object.
-    :param isNumbered: If the citation format is numbered.
-    :param set_container_title_italic: If set the container-title and publisher of Chinese paper to Italic.
-    :return:
-    """
-    title_item_key_dict = get_citations_info(word_obj)
-    title_container_title_tuple = [
-        (
-            title, title_item_key_dict[title]["container_title"], title_item_key_dict[title]["author"], title_item_key_dict[title]["publisher"],
-            title_item_key_dict[title]["language"],
-        ) for title in title_item_key_dict
-    ]
-
-    logger.info(f"Find bibliographies in the word, it may take a few seconds...")
-    # loop fields in docx
-    for field in word_obj.fields:
-
-        # find ZOTERO field.
-        if "ADDIN ZOTERO_BIBL" not in field.Code.Text:
-            continue
-
-        oRange = field.Result
-
-        # delete existed bookmark
-        for oBookMark in oRange.Bookmarks:
-            oBookMark.Delete()
-
-        # used for numbered citation
-        iCount = 1
-        total = len(list(oRange.Paragraphs))
-
-        with Progress() as progress:
-            pid = progress.add_task(f"[red]Adding bookmarks..[red]", total=total)
-
-            for oPara in oRange.Paragraphs:
-                progress.advance(pid, advance=1)
-
-                oRangePara = oPara.Range
-                bmRange = oRangePara
-
-                if isNumbered:
-                    bmtext = f"Ref_{iCount}"
-                    iCount += 1
-
-                else:
-                    text = oRangePara.Text
-                    bib_title = ""
-                    bib_container_title = ""
-                    bib_publisher = ""
-                    bib_language = ""
-
-                    for index, _tuple in enumerate(title_container_title_tuple):
-                        _title, _container_title, _author, _publisher, _language = _tuple
-                        if _title in text and _container_title in text and _author in text and f"{_title} " not in text:
-                            bib_title = _title
-                            bib_container_title = _container_title
-                            bib_publisher = _publisher
-                            bib_language = _language
-                            title_container_title_tuple.pop(index)
-                            break
-
-                    if bib_title == "":
-                        logger.warning(f"Can't find the corresponding citation of bib: {text}, do you really cite it?")
-                        continue
-
-                    bib_item_key = title_item_key_dict.pop(bib_title)["item_key"]
-                    bmtext = f"Ref_{bib_item_key}"
-
-                # set italic for Chinese container title
-                if set_container_title_italic and bib_language == "cn":
-
-                    if bib_container_title != "":
-                        split_paragraph = text.split(bib_container_title)
-                        pre_paragraph, post_paragraph = split_paragraph[0], split_paragraph[1]
-                        bmRange.MoveStart(Unit=1, Count=len(pre_paragraph))
-                        bmRange.MoveEnd(Unit=1, Count=-len(post_paragraph))
-                        bmRange.Font.Italic = True
-                        bmRange.MoveStart(Unit=1, Count=-len(pre_paragraph))
-                        bmRange.MoveEnd(Unit=1, Count=len(post_paragraph))
-
-                    if bib_publisher != "":
-                        split_paragraph = text.split(bib_publisher)
-                        pre_paragraph, post_paragraph = split_paragraph[0], split_paragraph[1]
-                        bmRange.MoveStart(Unit=1, Count=len(pre_paragraph))
-                        bmRange.MoveEnd(Unit=1, Count=-len(post_paragraph))
-                        bmRange.Font.Italic = True
-                        bmRange.MoveStart(Unit=1, Count=-len(pre_paragraph))
-                        bmRange.MoveEnd(Unit=1, Count=len(post_paragraph))
-
-                bmRange.MoveEnd(1, -1)
-                word_obj.add_bookmark(bmtext, bmRange)
-                bmRange.Collapse(0)
-
-
-__all__ = ["add_bookmarks_to_bibliography", "GetCitationInfoHook", "BibBookmarkHook"]
+__all__ = ["GetCitationInfoHook", "BibBookmarkHook"]

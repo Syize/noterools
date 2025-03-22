@@ -6,10 +6,8 @@ py3.install_sources(
         'error.py',
         'hook.py',
         'hyperlinks.py',
-        'run.py',
         'utils.py',
         'word.py',
-        'zotero.py',
     ],
     subdir: 'noterools'
 )
