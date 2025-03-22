@@ -1,0 +1,53 @@
+name: Build and Upload Python Package
+run-name: Building and uploading noterools Python package
+on:
+  release:
+    types: [published]
+
+jobs:
+  release-build:
+    name: Build Python Package
+    runs-on: ubuntu-latest
+  
+    steps:
+      - name: Check out repository code of master branch
+        uses: actions/checkout@v4
+
+      - name: Install compiler
+        run: sudo apt update && sudo apt install -y ninja-build libpython3-dev
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install build twine meson
+
+      - name: Build Python Package
+        run: python -m build --sdist ${{ github.workspace }}
+
+      - name: upload windows dists
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+
+  pypi-publish:
+    name: Upload package to pypi
+    runs-on: ubuntu-latest
+    needs:
+      - release-build
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Retrieve release distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+
+      - name: Publish release distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1.12
+        with:
+          verbose: true
