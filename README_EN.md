@@ -23,7 +23,7 @@ Currently, noterools can help you do the following things:
 ## Important Note
 
 - **This script can only work in Windows.**
-- **Numbered citation format hasn't been tested.**
+- **The function for adding hyperlinks to sequential citation formats works properly, but italicizing journal names and publishers is not yet supported.**
 
 ## How to use?
 

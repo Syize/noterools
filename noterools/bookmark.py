@@ -124,6 +124,11 @@ class BibBookmarkHook(HookBase):
                     if self.is_numbered:
                         bmtext = f"Ref_{iCount}"
                         iCount += 1
+                        # these variables need to be checked
+                        # let them be "" to avoid UnboundLocalError
+                        bib_container_title = ""
+                        bib_publisher = ""
+                        bib_language = ""
 
                     else:
                         text = oRangePara.Text
