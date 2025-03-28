@@ -40,10 +40,26 @@ if __name__ == '__main__':
     new_file_path = r"E:\Documents\Word\test_new.docx"
 
     with Word(word_file_path, save_path=new_file_path) as word:
-        # Add hook to add hyperlinks to Zotero citations.
-        add_citation_cross_ref_hook(word, is_numbered=False, color=16711680, no_under_line=True, set_container_title_italic=True)
-        # Add hook to set the font color and bold style for cross-references starting with 'Figure' in the main text.
+        # Add hyperlinks for numbered citation formats.
+        add_citation_cross_ref_hook(word, is_numbered=True)
+
+        # Add hyperlinks to (Author, Year) citation format. By default, container titles or publishers in the bibliography that are not correctly italicized will be set to italics.
+        # In Word, hyperlinks are blue by default, while noterools only adds hyperlinks to the year, causing a color mismatch between the author name and the year.
+        # add_citation_cross_ref_hook(word, is_numbered=False)
+
+        # By setting the value of color, you can change the color of the entire citation (excluding the parentheses).
+        # 0: Black
+        # 16711680: Blues
+        # For more colors, please see: https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor
+        # add_citation_cross_ref_hook(word, is_numbered=False, color=0)
+
+        # set_container_title_italic is used to control whether to correct names in the bibliography that are not properly italicized.
+        # You can disable this feature by setting it to False.
+        # add_citation_cross_ref_hook(word, is_numbered=False, set_container_title_italic=False)
+
+        # Set the font color and bold style for cross-references starting with 'Figure' in the main contents.
         add_cross_ref_style_hook(word, color=16711680, bold=True, key_word=["Figure"])
+        
         # Perform
         word.perform()
 ```
