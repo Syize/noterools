@@ -1,7 +1,7 @@
 from json import loads
 from os.path import basename
 
-from .bookmark import BibBookmarkHook, GetCitationInfoHook
+from .bibliography import BibBookmarkHook, GetCitationInfoHook
 from .error import AddHyperlinkError
 from .hook import HOOKTYPE, HookBase
 from .utils import get_year_list, logger, replace_invalid_char

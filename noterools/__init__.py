@@ -1,4 +1,4 @@
-from .bookmark import *
+from .bibliography import *
 from .colors import *
 from .error import *
 from .hook import *

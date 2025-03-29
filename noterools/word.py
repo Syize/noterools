@@ -51,6 +51,9 @@ class Word:
             self.word.Visible = False
             self._attached_existed_progress = False
 
+        if self._attached_existed_progress:
+            logger.warning(f"Open word file in visible mode, DO NOT CLOSE the word window!")
+
         self.docx = self.word.Documents.Open(self.word_file_path)
 
         self._context = True
@@ -62,7 +65,10 @@ class Word:
 
         self.to_word()
         if not self._attached_existed_progress:
+            self.docx.Close(False)
             self.word.Quit()
+        else:
+            self.docx.Close(False)
 
     def _check_context(self):
         if not self._context or self.word is None or self.docx is None:
@@ -236,7 +242,19 @@ class Word:
         :return:
         :rtype:
         """
-        if hook.name not in self._hook_in_dict:
+        if hook_type == HOOKTYPE.BEFORE_ITERATE:
+            _hook_dict = self._hook_before_dict
+
+        elif hook_type == HOOKTYPE.IN_ITERATE:
+            _hook_dict = self._hook_in_dict
+
+        elif hook_type == HOOKTYPE.AFTER_ITERATE:
+            _hook_dict = self._hook_after_dict
+
+        else:
+            raise HookTypeError(f"Unknown hook type: {hook_type}.")
+        
+        if hook.name not in _hook_dict:
             logger.warning(f"Hook {hook.name} doesn't exist.")
             return
 

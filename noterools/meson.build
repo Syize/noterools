@@ -1,7 +1,7 @@
 py3.install_sources(
     [
         '__init__.py',
-        'bookmark.py',
+        'bibliography.py',
         'colors.py',
         'error.py',
         'hook.py',
