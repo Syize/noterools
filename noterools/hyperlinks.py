@@ -1,7 +1,8 @@
 from json import loads
 from os.path import basename
 
-from .bibliography import BibBookmarkHook, GetCitationInfoHook
+from .bibliography import BibBookmarkHook
+from .csl import CSLJson
 from .error import AddHyperlinkError
 from .hook import HOOKTYPE, HookBase
 from .utils import get_year_list, logger, replace_invalid_char
@@ -12,6 +13,7 @@ class CitationHyperlinkHook(HookBase):
     """
     Hook to add hyperlinks to citations.
     """
+
     def __init__(self, is_numbered=False, color: int = None, no_under_line=True):
         super().__init__("CitationHyperlinkHook")
         self.is_numbered = is_numbered
@@ -74,21 +76,11 @@ class CitationHyperlinkHook(HookBase):
 
                 is_add_hyperlink = False
                 for _citation in citations_list:
-                    citation_year = _citation["itemData"]["issued"]["date-parts"][0][0]
-
-                    if "language" not in _citation["itemData"]:
-                        language = "en"
-                    else:
-                        language = _citation["itemData"]["language"]
-
-                    author_name = _citation["itemData"]["author"][0]
-                    if "family" in author_name:
-                        if "cn" in language.lower():
-                            author_name = author_name["family"] + author_name["given"]
-                        else:
-                            author_name = author_name["family"]
-                    else:
-                        author_name = author_name["literal"]
+                    item_key = basename(_citation["uris"][0])
+                    csl_json = CSLJson(_citation["itemData"])
+                    citation_year = str(csl_json.get_date().year)
+                    language = csl_json.get_language(defaults="cn")
+                    author_name = csl_json.get_author_names(language)[0]
 
                     if multiple_article_for_one_author:
                         authors_text = last_authors_text
@@ -101,7 +93,6 @@ class CitationHyperlinkHook(HookBase):
                     res3 = citation_text_length <= 7
 
                     if res1 or res2 or res3:
-                        item_key = basename(_citation["uris"][0])
                         bmtext = f"Ref_{item_key}"
 
                         try:
@@ -130,7 +121,7 @@ class CitationHyperlinkHook(HookBase):
             color_range.MoveEnd(Unit=1, Count=1)
 
 
-def add_citation_cross_ref_hook(word: Word, is_numbered=False, color: int = None, no_under_line = True, set_container_title_italic=True):
+def add_citation_cross_ref_hook(word: Word, is_numbered=False, color: int = None, no_under_line=True, set_container_title_italic=True):
     """
     Add hook to add hyperlinks from citations to bibliographies.
 
@@ -147,12 +138,9 @@ def add_citation_cross_ref_hook(word: Word, is_numbered=False, color: int = None
     :return:
     :rtype:
     """
-    # with GetCitationInfoHook we can get more info about articles to add proper bookmarks
-    get_citations_info_hook = GetCitationInfoHook()
-    word.set_hook(get_citations_info_hook)
     word.set_hook(CitationHyperlinkHook(is_numbered, color, no_under_line))
     # add bookmarks after creating hyperlinks is ok
-    bib_bookmark_hook = BibBookmarkHook(get_citations_info_hook, is_numbered, set_container_title_italic)
+    bib_bookmark_hook = BibBookmarkHook(is_numbered, set_container_title_italic)
     word.set_hook(bib_bookmark_hook)
     word.set_hook(bib_bookmark_hook, HOOKTYPE.AFTER_ITERATE)
 

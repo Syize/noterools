@@ -40,4 +40,16 @@ class ArticleNotFoundError(NoteroolsBasicError):
     pass
 
 
-__all__ = ["NoteroolsBasicError", "AddBookmarkError", "AddHyperlinkError", "ContextError", "HookTypeError", "ArticleNotFoundError"]
+class TitleNotFoundError(NoteroolsBasicError):
+    """
+    Article title not found.
+    """
+
+
+class AuthorNotFoundError(NoteroolsBasicError):
+    """
+    Article author not found.
+    """
+
+
+__all__ = ["NoteroolsBasicError", "AddBookmarkError", "AddHyperlinkError", "ContextError", "HookTypeError", "ArticleNotFoundError", "TitleNotFoundError", "AuthorNotFoundError"]

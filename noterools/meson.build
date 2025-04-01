@@ -2,6 +2,7 @@ py3.install_sources(
     [
         '__init__.py',
         'bibliography.py',
+        'csl.py',
         'colors.py',
         'error.py',
         'hook.py',
