@@ -1,8 +1,10 @@
+import difflib
 import re
 
 from rich.progress import Progress
 
 from .csl import GetCSLJsonHook
+from .error import ParamsError
 from .hook import HookBase, HOOKTYPE
 from .utils import logger
 from .word import Word
@@ -13,12 +15,30 @@ def _find_page_num_section(text: str) -> list[str]:
     return re.findall(pattern, text)
 
 
+def _find_words(text: str, words_list: list[str]):
+    pattern = r"\b(?:" + "|".join(re.escape(word) for word in words_list) + r")\b"
+    return re.findall(pattern, text)
+
+
 class BibBookmarkHook(GetCSLJsonHook):
-    def __init__(self, is_numbered=False, set_container_title_italic=True):
+    def __init__(self, is_numbered=False, set_container_title_italic=True, upper_first_char=False, upper_all_words=False, lower_all_words=False, word_dict: list[str] = None):
         super().__init__(name="BibBookmarkHook")
         self.is_numbered = is_numbered
         self.set_container_title_italic = set_container_title_italic
         self._fields_list = []
+
+        if upper_all_words + upper_first_char + lower_all_words >= 2:
+            logger.error(f"You must chose only one format rule for article's title.")
+            raise ParamsError(f"You must chose only one format rule for article's title.")
+
+        if lower_all_words and word_dict is None:
+            logger.error("To prevent proper noun to be lower, you must give your word dictionary contains roper noun.")
+            raise ParamsError("To prevent proper noun to be lower, you must give your word dictionary contains roper noun.")
+
+        self.upper_first_char = upper_first_char
+        self.upper_all_words = upper_all_words
+        self.lower_all_words = lower_all_words
+        self.word_dict = word_dict
 
     def on_iterate(self, word, field):
         if "ADDIN ZOTERO_BIBL" in field.Code.Text:
@@ -30,7 +50,7 @@ class BibBookmarkHook(GetCSLJsonHook):
         csl_json_dict = self.csl_json_dict
         item_info_tuple = [
             (
-                csl_json.get_title(), csl_json.get_container_title(), csl_json.get_author_names(language=csl_json.get_language(defaults="cn")),
+                csl_json.get_title(), csl_json.get_container_title(), csl_json.get_author_names(language=csl_json.get_language(defaults="cn"))[0],
                 csl_json.get_publisher(), csl_json.get_language(defaults="cn"), item_id
             ) for item_id, csl_json in csl_json_dict.items()
         ]
@@ -95,7 +115,7 @@ class BibBookmarkHook(GetCSLJsonHook):
                         bmtext = f"Ref_{bib_item_key}"
 
                     # set italic for Chinese container title
-                    if self.set_container_title_italic and bib_language == "cn":
+                    if self.set_container_title_italic and "cn" in bib_language:
 
                         if bib_container_title != "":
                             split_paragraph = text.split(bib_container_title)
@@ -115,6 +135,93 @@ class BibBookmarkHook(GetCSLJsonHook):
                             bmRange.MoveStart(Unit=1, Count=-len(pre_paragraph))
                             bmRange.MoveEnd(Unit=1, Count=len(post_paragraph))
 
+                    if bib_title != "" and bib_language == "en":
+                        if self.upper_all_words:
+                            split_paragraph = text.split(bib_title)
+                            new_bib_title = bib_title.upper()
+
+                            pre_paragraph, post_paragraph = split_paragraph[0], split_paragraph[1]
+                            bmRange.MoveStart(Unit=1, Count=len(pre_paragraph))
+                            bmRange.MoveEnd(Unit=1, Count=-len(post_paragraph))
+                            bmRange.Text = new_bib_title
+                            bmRange.MoveStart(Unit=1, Count=-len(pre_paragraph))
+                            bmRange.MoveEnd(Unit=1, Count=len(post_paragraph))
+
+                        elif self.upper_first_char:
+                            split_paragraph = text.split(bib_title)
+                            new_bib_title = bib_title.split(" ")
+                            for index, _word in enumerate(new_bib_title):
+                                _word = f"{_word[0].upper()}{_word[1:]}"
+                                new_bib_title[index] = _word
+                            new_bib_title = " ".join(new_bib_title)
+
+                            pre_paragraph, post_paragraph = split_paragraph[0], split_paragraph[1]
+                            bmRange.MoveStart(Unit=1, Count=len(pre_paragraph))
+                            bmRange.MoveEnd(Unit=1, Count=-len(post_paragraph))
+                            bmRange.Text = new_bib_title
+                            bmRange.MoveStart(Unit=1, Count=-len(pre_paragraph))
+                            bmRange.MoveEnd(Unit=1, Count=len(post_paragraph))
+
+                        elif self.lower_all_words:
+                            res = _find_words(text, self.word_dict)
+
+                            if len(res) == 0:
+                                new_bib_title = bib_title.split(" ")
+                                for index, _word in enumerate(new_bib_title):
+                                    if index == 0:
+                                        _word = f"{_word[0].upper()}{_word[1:].lower()}"
+                                        new_bib_title[index] = _word
+                                    else:
+                                        if new_bib_title[index - 1].startswith((":", ".", "?")):
+                                            _word = f"{_word[0].upper()}{_word[1:].lower()}"
+                                            new_bib_title[index] = _word
+                                        else:
+                                            new_bib_title[index] = _word.lower()
+
+                                new_bib_title = " ".join(new_bib_title)
+
+                            else:
+                                logger.debug(f"Find proper nouns in title: {res}")
+                                new_bib_title = bib_title.split(" ")
+                                for index, _word in enumerate(new_bib_title):
+                                    if index == 0:
+                                        _word = f"{_word[0].upper()}{_word[1:].lower()}"
+                                        new_bib_title[index] = _word
+                                    else:
+                                        if new_bib_title[index - 1].endswith((":", ".", "?")):
+                                            _word = f"{_word[0].upper()}{_word[1:].lower()}"
+                                            new_bib_title[index] = _word
+                                        else:
+                                            new_bib_title[index] = _word.lower()
+
+                                new_bib_title = " ".join(new_bib_title)
+
+                                for proper_noun in res:
+                                    if proper_noun.lower() in new_bib_title:
+                                        logger.debug(f"Find proper noun {proper_noun} in title: {new_bib_title}")
+                                        new_bib_title = new_bib_title.replace(proper_noun.lower(), proper_noun)
+
+                                    else:
+                                        proper_noun_lower = proper_noun.lower()
+                                        proper_noun_lower = f"{proper_noun_lower[0].upper()}{proper_noun_lower[1:]}"
+
+                                        if proper_noun_lower in new_bib_title:
+                                            logger.debug(f"Find proper noun {proper_noun} in title: {new_bib_title}")
+                                            new_bib_title = new_bib_title.replace(proper_noun_lower, proper_noun)
+
+                                        else:
+                                            logger.warning(f"Can't find proper noun '{proper_noun}' in title: {new_bib_title}")
+
+                            split_paragraph = text.split(bib_title)
+                            logger.debug(f"Update title '{bib_title}' to '{new_bib_title}'")
+                            pre_paragraph, post_paragraph = split_paragraph[0], split_paragraph[1]
+                            bmRange.MoveStart(Unit=1, Count=len(pre_paragraph))
+                            bmRange.MoveEnd(Unit=1, Count=-len(post_paragraph))
+                            bmRange.Text = new_bib_title
+                            bmRange.MoveStart(Unit=1, Count=-len(pre_paragraph))
+                            bmRange.MoveEnd(Unit=1, Count=len(post_paragraph))
+
+
                     bmRange.MoveEnd(1, -1)
                     word.add_bookmark(bmtext, bmRange)
                     bmRange.Collapse(0)
@@ -128,7 +235,7 @@ class BibUpdateDashSymbolHook(HookBase):
     This hook will replace the dash symbol with ``–``, which Unicode is ``2013``.
     """
 
-    def __init__(self, font_family="Times New Roman"):
+    def __init__(self, font_family="Times New Roman", upper_first_char=False, upper_all_words=False, lower_all_words=False):
         super().__init__("BibUpdateDashSymbolHook")
         self.font_family = font_family
         self._fields_list = []

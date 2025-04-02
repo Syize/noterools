@@ -1,4 +1,5 @@
 from .hook import HookBase
+from .utils import logger
 from .word import Word
 
 
@@ -58,6 +59,10 @@ def add_cross_ref_style_hook(word_obj: Word, color: int = None, bold=False, key_
     if isinstance(key_word, list):
         for _key in key_word:
             word_obj.set_hook(CrossRefStyleHook(color, bold, str(_key)))
+
+    else:
+        logger.warning("Set style for all cross references because `key_word` is None")
+        word_obj.set_hook(CrossRefStyleHook(color, bold))
 
 
 __all__ = ["add_cross_ref_style_hook", "CrossRefStyleHook"]

@@ -44,12 +44,22 @@ class TitleNotFoundError(NoteroolsBasicError):
     """
     Article title not found.
     """
+    pass
 
 
 class AuthorNotFoundError(NoteroolsBasicError):
     """
     Article author not found.
     """
+    pass
 
 
-__all__ = ["NoteroolsBasicError", "AddBookmarkError", "AddHyperlinkError", "ContextError", "HookTypeError", "ArticleNotFoundError", "TitleNotFoundError", "AuthorNotFoundError"]
+class ParamsError(NoteroolsBasicError):
+    """
+    Sme hooks may require the user to give at least one parameter.
+    """
+    pass
+
+
+__all__ = ["NoteroolsBasicError", "AddBookmarkError", "AddHyperlinkError", "ContextError", "HookTypeError", "ArticleNotFoundError", "TitleNotFoundError", "AuthorNotFoundError",
+           "ParamsError"]

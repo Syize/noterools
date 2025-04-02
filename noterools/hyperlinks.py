@@ -121,7 +121,8 @@ class CitationHyperlinkHook(HookBase):
             color_range.MoveEnd(Unit=1, Count=1)
 
 
-def add_citation_cross_ref_hook(word: Word, is_numbered=False, color: int = None, no_under_line=True, set_container_title_italic=True):
+def add_citation_cross_ref_hook(word: Word, is_numbered=False, color: int = None, no_under_line=True, set_container_title_italic=True,
+                                upper_first_char=False, upper_all_words=False, lower_all_words=False, word_dict: list[str] = None):
     """
     Add hook to add hyperlinks from citations to bibliographies.
 
@@ -140,7 +141,7 @@ def add_citation_cross_ref_hook(word: Word, is_numbered=False, color: int = None
     """
     word.set_hook(CitationHyperlinkHook(is_numbered, color, no_under_line))
     # add bookmarks after creating hyperlinks is ok
-    bib_bookmark_hook = BibBookmarkHook(is_numbered, set_container_title_italic)
+    bib_bookmark_hook = BibBookmarkHook(is_numbered, set_container_title_italic, upper_first_char, upper_all_words, lower_all_words, word_dict)
     word.set_hook(bib_bookmark_hook)
     word.set_hook(bib_bookmark_hook, HOOKTYPE.AFTER_ITERATE)
 

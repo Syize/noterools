@@ -27,6 +27,12 @@ class CSLJson(dict):
     def __getitem__(self, item: str):
         return super().__getitem__(item)
 
+    def get_type(self) -> str:
+        if "type" not in self:
+            return "article-journal"
+        else:
+            return self["type"]
+
     def get_title(self) -> str:
         """
         Get article's title.
@@ -90,6 +96,9 @@ class CSLJson(dict):
         :return: All authors' name in a list.
         :rtype: list
         """
+        if self.get_type() == "software":
+            language = "en"
+
         if "author" in self:
             key_name = "author"
 
@@ -122,7 +131,11 @@ class CSLJson(dict):
         if "issued" not in self:
             return datetime(1900, 1, 1)
         else:
-            return datetime(*tuple(self["issued"]["date-parts"][0]))
+            date_list = self["issued"]["date-parts"][0]
+            date_list = [int(x) for x in date_list]
+            while len(date_list) < 3:
+                date_list.append(1)
+            return datetime(*tuple(date_list))
 
 
 class GetCSLJsonHook(HookBase):
