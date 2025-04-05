@@ -13,6 +13,8 @@ Currently, noterools can help you do the following things:
 - Customize the font color of Zotero citations.
 - Italicize journal names and publishers in the Zotero bibliography that aren't correctly formatted as italics.
 - Adjust the font color and weight for cross-references within the main text.
+- Replace the hyphen (-, Unicode 002D) used for page ranges in the bibliography with an en dash (–, Unicode 2013).
+- (Experimental Feature) Modify the capitalization style of English reference titles. Supports three styles: ALL CAPS, Title Case (Capitalize Each Word), and Sentence case (Capitalize first word only).
 
 ## Screenshots
 
@@ -23,7 +25,6 @@ Currently, noterools can help you do the following things:
 ## Important Note
 
 - **This script can only work in Windows.**
-- **The function for adding hyperlinks to sequential citation formats works properly, but italicizing journal names and publishers is not yet supported.**
 
 ## How to use?
 
@@ -46,8 +47,8 @@ if __name__ == '__main__':
         # Add hyperlinks for numbered citation formats.
         add_citation_cross_ref_hook(word, is_numbered=True)
 
-        # Add hyperlinks to (Author, Year) citation format. By default, container titles or publishers in the bibliography that are not correctly italicized will be set to italics.
-        # In Word, hyperlinks are blue by default, while noterools only adds hyperlinks to the year, causing a color mismatch between the author name and the year.
+        # Add hyperlinks to (Author, Year) citation format, set the citation font color to blue.
+        # By default, container titles or publishers in the bibliography that are not correctly italicized will be set to italics.
         # add_citation_cross_ref_hook(word, is_numbered=False)
 
         # By setting the value of color, you can change the color of the entire citation (excluding the parentheses).
@@ -62,4 +63,20 @@ if __name__ == '__main__':
 
         # Set the font color and bold style for cross-references starting with 'Figure' in the main contents.
         add_cross_ref_style_hook(word, color=16711680, bold=True, key_word=["Figure"])
+
+        # Replace the hyphen with en dash.
+        # add_update_dash_symbol_hook(word)
+        
+        # Change English articles' title format to All CAPS.
+        # add_format_title_hook(word, upper_all_words=True)
+        
+        # Change English articles' title format to Title Case (minor words will be changed too).
+        # add_format_title_hook(word, upper_first_char=True)
+        
+        # Change English articles' title format to Sentence Case.
+        # add_format_title_hook(word, lower_all_words=True)
+        
+     	# You can give a list contains proper noun when change format to Sentence Case.
+        # word_list = ["UNet", "US", "China", "WRF"]
+        # add_format_title_hook(word, lower_all_words=True, word_list=word_list)
 ```

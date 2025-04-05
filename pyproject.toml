@@ -4,7 +4,7 @@ requires = ["meson-python"]
 
 [project]
 name = "noterools"
-version = "1.0.2"
+version = "1.1.0"
 readme = "README_EN.md"
 license = { text = "GPL-3.0-or-later" }
 requires-python = '>=3.10'
