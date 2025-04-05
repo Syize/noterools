@@ -1,77 +1,26 @@
-from typing import Optional
-
-from pyzotero.zotero import Zotero
-
-from .error import ArticleNotFoundError
-from .utils import logger
-
-ZOTERO_CLIENT: Optional[Zotero] = None
+from .bibliography import add_bib_bookmark_hook
+from .citation import add_citation_hyperlink_hook
+from .word import Word
 
 
-def init_zotero_client(zotero_id: str, zotero_api_key: str, force=False):
+def add_citation_cross_ref_hook(word: Word, is_numbered=False, color: int = 16711680, no_under_line=True, set_container_title_italic=True):
     """
-    Initial the client to Zotero.
+    Register hooks to add hyperlinks from citations to bibliographies.
 
-    :param zotero_id: User ID.
-    :param zotero_api_key: API key of Zotero.
-    :param force: Force to re-initial Zotero client.
-    :return:
+    :param word: ``noterools.word.Word`` object.
+    :type word: Word
+    :param is_numbered: If your citation is numbered. Defaults to False.
+    :type is_numbered: bool
+    :param color: Set font color. Defaults to ``blue (16711680)``. You can look up the value at `VBA Documentation
+                  <https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor>`_.
+    :type color: int
+    :param no_under_line: If remove the underline of hyperlinks. Defaults to True.
+    :type no_under_line: bool
+    :param set_container_title_italic: If italicize the container title and publisher name in bibliography. Defaults to True.
+    :type set_container_title_italic: bool
     """
-    global ZOTERO_CLIENT
-
-    if ZOTERO_CLIENT is None or force:
-        ZOTERO_CLIENT = Zotero(zotero_id, "user", zotero_api_key)
+    add_citation_hyperlink_hook(word, is_numbered, color, no_under_line)
+    add_bib_bookmark_hook(word, is_numbered, set_container_title_italic)
 
 
-def search_article(itemKey: str) -> dict:
-    """
-    Use the itemKey to search the corresponding article in Zotero.
-
-    :param itemKey: Zotero item key.
-    :return: Article info.
-    """
-    global ZOTERO_CLIENT
-
-    res = ZOTERO_CLIENT.items(itemKey=itemKey)
-    if len(res) == 0:
-        logger.error(f"Can't find the article which itemKey is {itemKey}")
-        raise ArticleNotFoundError(f"Can't find the article which itemKey is {itemKey}")
-
-    elif len(res) > 1:
-        logger.warning(f"Find multiple articles which itemKey are same, use the first one")
-
-    return res[0]
-
-
-def get_author_list(item: dict) -> list[str]:
-    """
-    Get full names of authors from the item.
-
-    :param item: Item from Zotero.
-    :return: Authors' name list.
-    """
-    creators = item["data"]["creators"]
-    name_list = []
-
-    for creator in creators:
-        if creator["creatorType"] != "author":
-            continue
-
-        if "name" in creator:
-            name_list.append(creator["name"])
-
-        else:
-            first_name = creator["firstName"]
-
-            if 65 <= ord(first_name[0]) <= 90 or 97 <= ord(first_name[0]) <= 122:
-                # English name
-                name_list.append(creator["firstName"] + creator["lastName"])
-
-            else:
-                # Chinese name
-                name_list.append(creator["lastName"] + creator["firstName"])
-
-    return name_list
-
-
-__all__ = ["init_zotero_client", "search_article", "get_author_list"]
+__all__ = ["add_citation_cross_ref_hook"]

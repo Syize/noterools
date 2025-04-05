@@ -4,8 +4,9 @@ from os.path import basename
 from typing import Union
 
 from .error import TitleNotFoundError, AuthorNotFoundError
-from .hook import HookBase
+from .hook import HookBase, HOOKTYPE
 from .utils import logger
+from .word import Word
 
 
 class CSLJson(dict):
@@ -142,8 +143,8 @@ class GetCSLJsonHook(HookBase):
     """
     Parse the CSL JSON in Zotero's citations.
     """
-    def __init__(self, name="GetCSLJsonHook"):
-        super().__init__(name=name)
+    def __init__(self):
+        super().__init__("GetCSLJsonHook")
         self.csl_json_dict: dict[str, CSLJson] = {}
 
     def get_csl_jsons(self) -> dict[str, CSLJson]:
@@ -172,4 +173,19 @@ class GetCSLJsonHook(HookBase):
                 self.csl_json_dict[item_id] = CSLJson(_citation["itemData"])
 
 
-__all__ = ["GetCSLJsonHook", "CSLJson"]
+def add_get_csl_json_hook(word: Word) -> GetCSLJsonHook:
+    """
+    Register ``GetCSLJsonHook``.
+
+    :param word: ``noterools.word.Word`` object.
+    :type word: Word
+    :return: ``GetCSLJsonHook`` instance.
+    :rtype: GetCSLJsonHook
+    """
+    get_csl_json_hook = GetCSLJsonHook()
+    word.set_hook(get_csl_json_hook, HOOKTYPE.IN_ITERATE)
+
+    return get_csl_json_hook
+
+
+__all__ = ["GetCSLJsonHook", "CSLJson", "add_get_csl_json_hook"]

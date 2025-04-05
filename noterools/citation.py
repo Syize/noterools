@@ -1,10 +1,9 @@
 from json import loads
 from os.path import basename
 
-from .bibliography import BibBookmarkHook
 from .csl import CSLJson
 from .error import AddHyperlinkError
-from .hook import HOOKTYPE, HookBase
+from .hook import HookBase
 from .utils import get_year_list, logger, replace_invalid_char
 from .word import Word
 
@@ -121,29 +120,25 @@ class CitationHyperlinkHook(HookBase):
             color_range.MoveEnd(Unit=1, Count=1)
 
 
-def add_citation_cross_ref_hook(word: Word, is_numbered=False, color: int = None, no_under_line=True, set_container_title_italic=True,
-                                upper_first_char=False, upper_all_words=False, lower_all_words=False, word_dict: list[str] = None):
+def add_citation_hyperlink_hook(word: Word, is_numbered=False, color: int = None, no_under_line=True) -> CitationHyperlinkHook:
     """
-    Add hook to add hyperlinks from citations to bibliographies.
+    Register ``CitationHyperlinkHook``.
 
-    :param word:
-    :type word:
-    :param is_numbered:
-    :type is_numbered:
-    :param color:
-    :type color:
-    :param no_under_line:
-    :type no_under_line:
-    :param set_container_title_italic:
-    :type set_container_title_italic:
-    :return:
-    :rtype:
+    :param word: ``noterools.word.Word`` object.
+    :type word: Word
+    :param is_numbered: If your citation is numbered. Defaults to False.
+    :type is_numbered: bool
+    :param color: Set font color. You can look up the value at `VBA Documentation <https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor>`_.
+    :type color: int
+    :param no_under_line: If remove the underline of hyperlinks. Defaults to True.
+    :type no_under_line: bool
+    :return: ``CitationHyperlinkHook`` instance.
+    :rtype: CitationHyperlinkHook
     """
-    word.set_hook(CitationHyperlinkHook(is_numbered, color, no_under_line))
-    # add bookmarks after creating hyperlinks is ok
-    bib_bookmark_hook = BibBookmarkHook(is_numbered, set_container_title_italic, upper_first_char, upper_all_words, lower_all_words, word_dict)
-    word.set_hook(bib_bookmark_hook)
-    word.set_hook(bib_bookmark_hook, HOOKTYPE.AFTER_ITERATE)
+    citation_hyperlink_hook = CitationHyperlinkHook(is_numbered, color, no_under_line)
+    word.set_hook(citation_hyperlink_hook)
+
+    return citation_hyperlink_hook
 
 
-__all__ = ["add_citation_cross_ref_hook", "CitationHyperlinkHook"]
+__all__ = ["CitationHyperlinkHook", "add_citation_hyperlink_hook"]

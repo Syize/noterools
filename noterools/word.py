@@ -16,6 +16,7 @@ class Word:
     Wrapped Word instance.
 
     """
+
     def __init__(self, word_file_path: str, save_path: str = None):
         if not exists(word_file_path):
             logger.error(f"File not found: {word_file_path}")
@@ -61,6 +62,8 @@ class Word:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self._perform()
+
         self._context = False
 
         self.to_word()
@@ -202,6 +205,8 @@ class Word:
         else:
             raise HookTypeError(f"Unknown hook type: {hook_type}.")
 
+        hook.finish_register(hook_type)
+
     def set_hook(self, hook: HookBase, hook_type: Union[int, HOOKTYPE] = HOOKTYPE.IN_ITERATE):
         """
         Set function hook for Word field.
@@ -224,6 +229,10 @@ class Word:
 
         else:
             raise HookTypeError(f"Unknown hook type: {hook_type}.")
+
+        if hook.is_registered(hook_type):
+            logger.debug(f"Hook '{hook.name}' is registered for hook type '{hook_type}'.")
+            return
 
         if hook.name in _hook_dict:
             logger.warning(f"Hook {hook.name} won't be added because a hook with same name exists.")
@@ -253,7 +262,11 @@ class Word:
 
         else:
             raise HookTypeError(f"Unknown hook type: {hook_type}.")
-        
+
+        if hook.is_registered(hook_type):
+            logger.debug(f"Hook '{hook.name}' is registered for hook type '{hook_type}'.")
+            return
+
         if hook.name not in _hook_dict:
             logger.warning(f"Hook {hook.name} doesn't exist.")
             return
@@ -280,7 +293,7 @@ class Word:
         else:
             raise HookTypeError(f"Unknown hook type: {hook_type}.")
 
-    def before_perform(self):
+    def _before_perform(self):
         """
         Call hooks before iterations.
 
@@ -288,9 +301,10 @@ class Word:
         :rtype:
         """
         for name in self._hook_before_dict:
+            logger.debug(f"Call hook: {name}")
             self._hook_before_dict[name].before_iterate(self)
 
-    def after_perform(self):
+    def _after_perform(self):
         """
         Call hooks after iterations.
 
@@ -298,16 +312,17 @@ class Word:
         :rtype:
         """
         for name in self._hook_after_dict:
+            logger.debug(f"Call hook: {name}")
             self._hook_after_dict[name].after_iterate(self)
 
-    def perform(self):
+    def _perform(self):
         """
         Perform iterations.
 
         :return:
         :rtype:
         """
-        self.before_perform()
+        self._before_perform()
 
         total = len(list(self.docx.Fields))
         with Progress() as progress:
@@ -317,9 +332,10 @@ class Word:
                 progress.advance(pid)
 
                 for name in self._hook_in_dict:
+                    logger.debug(f"Call hook: {name}")
                     self._hook_in_dict[name].on_iterate(self, field)
 
-        self.after_perform()
+        self._after_perform()
 
 
 __all__ = ["Word"]

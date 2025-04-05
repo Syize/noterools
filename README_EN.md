@@ -28,10 +28,13 @@ Currently, noterools can help you do the following things:
 ## How to use?
 
 1. Install noterools via pip.
+
 ```bash
 pip install noterools
 ```
+
 2. Create a Python script and run it. Here is a simple example.
+
 ```python
 from noterools import Word, add_citation_cross_ref_hook, add_cross_ref_style_hook
 
@@ -59,7 +62,4 @@ if __name__ == '__main__':
 
         # Set the font color and bold style for cross-references starting with 'Figure' in the main contents.
         add_cross_ref_style_hook(word, color=16711680, bold=True, key_word=["Figure"])
-        
-        # Perform
-        word.perform()
 ```

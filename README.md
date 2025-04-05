@@ -32,6 +32,7 @@
 pip install noterools
 ```
 2. 创建一个Python脚本并运行。以下是一个简单的示例
+
 ```python
 from noterools import Word, add_citation_cross_ref_hook, add_cross_ref_style_hook
 
@@ -59,7 +60,4 @@ if __name__ == '__main__':
 
         # 为正文中以 Figure 开头的交叉引用字体设置蓝色和粗体
         add_cross_ref_style_hook(word, color=16711680, bold=True, key_word=["Figure"])
-        
-        # 执行操作
-        word.perform()
 ```

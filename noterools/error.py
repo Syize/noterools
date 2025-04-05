@@ -56,10 +56,17 @@ class AuthorNotFoundError(NoteroolsBasicError):
 
 class ParamsError(NoteroolsBasicError):
     """
-    Sme hooks may require the user to give at least one parameter.
+    Some hooks may require the user to give at least one parameter.
+    """
+    pass
+
+
+class HookNotRegisteredError(NoteroolsBasicError):
+    """
+    Hook not registered.
     """
     pass
 
 
 __all__ = ["NoteroolsBasicError", "AddBookmarkError", "AddHyperlinkError", "ContextError", "HookTypeError", "ArticleNotFoundError", "TitleNotFoundError", "AuthorNotFoundError",
-           "ParamsError"]
+           "ParamsError", "HookNotRegisteredError"]
