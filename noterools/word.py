@@ -1,6 +1,8 @@
+import logging
+from os import makedirs
 from os.path import basename, dirname, exists
 from shutil import move
-from typing import Union
+from typing import Union, Optional
 
 from rich.progress import Progress
 from win32com.client import CDispatch, Dispatch, GetObject
@@ -11,13 +13,25 @@ from .hook import HOOKTYPE, HookBase
 from .utils import logger
 
 
+def _add_log_file(log_path: str):
+    file_handler = logging.FileHandler(log_path, "w", encoding="utf-8")
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s :: %(message)s")
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+
+
 class Word:
     """
     Wrapped Word instance.
 
     """
 
-    def __init__(self, word_file_path: str, save_path: str = None):
+    def __init__(self, word_file_path: str, save_path: str = None, log_path: Optional[str] = None):
+        if log_path is not None:
+            if not exists(dirname(log_path)):
+                makedirs(dirname(log_path))
+            _add_log_file(log_path)
+
         if not exists(word_file_path):
             logger.error(f"File not found: {word_file_path}")
             raise FileNotFoundError(f"File not found: {word_file_path}")
@@ -37,6 +51,12 @@ class Word:
 
     @property
     def fields(self):
+        """
+        A wrapper for docx.Fields.
+
+        :return:
+        :rtype:
+        """
         self._check_context()
 
         return self.docx.Fields
@@ -62,11 +82,19 @@ class Word:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._perform()
+        if exc_type is not None:
+            self._close_word()
+            raise exc_type(exc_val)
 
-        self._context = False
+        else:
+            self._perform()
 
-        self.to_word()
+            self._context = False
+
+            self.to_word()
+            self._close_word()
+            
+    def _close_word(self):
         if not self._attached_existed_progress:
             self.docx.Close(False)
             self.word.Quit()
@@ -301,7 +329,6 @@ class Word:
         :rtype:
         """
         for name in self._hook_before_dict:
-            logger.debug(f"Call hook: {name}")
             self._hook_before_dict[name].before_iterate(self)
 
     def _after_perform(self):
@@ -312,7 +339,6 @@ class Word:
         :rtype:
         """
         for name in self._hook_after_dict:
-            logger.debug(f"Call hook: {name}")
             self._hook_after_dict[name].after_iterate(self)
 
     def _perform(self):
@@ -332,7 +358,6 @@ class Word:
                 progress.advance(pid)
 
                 for name in self._hook_in_dict:
-                    logger.debug(f"Call hook: {name}")
                     self._hook_in_dict[name].on_iterate(self, field)
 
         self._after_perform()

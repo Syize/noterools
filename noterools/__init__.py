@@ -1,3 +1,4 @@
+from ._entry import *
 from .bibliography import *
 from .citation import *
 from .colors import *

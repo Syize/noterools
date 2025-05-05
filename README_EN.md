@@ -37,7 +37,8 @@ pip install noterools
 2. Create a Python script and run it. Here is a simple example.
 
 ```python
-from noterools import Word, add_citation_cross_ref_hook, add_cross_ref_style_hook
+from noterools import Word, add_cross_ref_style_hook
+from noterools._entry import add_citation_cross_ref_hook
 
 if __name__ == '__main__':
     word_file_path = r"E:\Documents\Word\test.docx"
@@ -64,19 +65,21 @@ if __name__ == '__main__':
         # Set the font color and bold style for cross-references starting with 'Figure' in the main contents.
         add_cross_ref_style_hook(word, color=16711680, bold=True, key_word=["Figure"])
 
-        # Replace the hyphen with en dash.
-        # add_update_dash_symbol_hook(word)
-        
+        # Replace the hyphen with en dash, you need to provide your Zotero ID and Zotero API key.
+        # Please refer to the pyzotero documentation to find your Zotero ID and apply for an API key.
+        # https://pyzotero.readthedocs.io/en/latest/#getting-started-short-version
+        # add_update_dash_symbol_hook(word, "Your ID", "Your key")
+
         # Change English articles' title format to All CAPS.
         # add_format_title_hook(word, upper_all_words=True)
-        
+
         # Change English articles' title format to Title Case (minor words will be changed too).
         # add_format_title_hook(word, upper_first_char=True)
-        
+
         # Change English articles' title format to Sentence Case.
         # add_format_title_hook(word, lower_all_words=True)
-        
-     	# You can give a list contains proper noun when change format to Sentence Case.
-        # word_list = ["UNet", "US", "China", "WRF"]
-        # add_format_title_hook(word, lower_all_words=True, word_list=word_list)
+
+    # You can give a list contains proper noun when change format to Sentence Case.
+    # word_list = ["UNet", "US", "China", "WRF"]
+    # add_format_title_hook(word, lower_all_words=True, word_list=word_list)
 ```

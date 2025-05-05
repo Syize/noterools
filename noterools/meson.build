@@ -1,6 +1,7 @@
 py3.install_sources(
     [
         '__init__.py',
+        '_entry.py',
         'bibliography.py',
         'citation.py',
         'csl.py',

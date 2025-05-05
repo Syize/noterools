@@ -29,6 +29,12 @@ class CSLJson(dict):
         return super().__getitem__(item)
 
     def get_type(self) -> str:
+        """
+        Get item's type.
+
+        :return: Item type.
+        :rtype: str
+        """
         if "type" not in self:
             return "article-journal"
         else:
@@ -170,6 +176,9 @@ class GetCSLJsonHook(HookBase):
             item_id = basename(_citation["uris"][0])
 
             if item_id not in self.csl_json_dict:
+                logger.debug("Add item info:")
+                logger.debug(f"Item ID: {item_id}")
+                logger.debug(_citation["itemData"])
                 self.csl_json_dict[item_id] = CSLJson(_citation["itemData"])
 
 

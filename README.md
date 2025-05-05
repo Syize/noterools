@@ -35,7 +35,8 @@ pip install noterools
 2. 创建一个 Python 脚本并运行。以下是一个简单的示例
 
 ```python
-from noterools import Word, add_citation_cross_ref_hook, add_cross_ref_style_hook
+from noterools import Word, add_cross_ref_style_hook
+from noterools._entry import add_citation_cross_ref_hook
 
 if __name__ == '__main__':
     word_file_path = r"E:\Documents\Word\test.docx"
@@ -61,20 +62,22 @@ if __name__ == '__main__':
 
         # 为正文中以 Figure 开头的交叉引用字体设置蓝色和粗体
         add_cross_ref_style_hook(word, color=16711680, bold=True, key_word=["Figure"])
-        
-        # 修正 "-" 符号
-        # add_update_dash_symbol_hook(word)
-        
+
+        # 修正 "-" 符号，你需要提供你的 Zotero ID 和 Zotero API key。
+        # 请参考 pyzotero 的文档获取你的 Zotero ID 和申请 API key。
+        # https://pyzotero.readthedocs.io/en/latest/#getting-started-short-version
+        # add_update_dash_symbol_hook(word, "你的 ID", "你的 key")
+
         # 将英文标题改为全部大写
         # add_format_title_hook(word, upper_all_words=True)
-        
+
         # 将英文标题改为首字母大写
         # add_format_title_hook(word, upper_first_char=True)
-        
+
         # 将英文标题改为仅句首单词的首字母大写
         # add_format_title_hook(word, lower_all_words=True)
-        
-     	# 改为仅句首单词的首字母大写时，你可以给出一个专有名词列表，noterools 会检测其中的专有名词，防止这些名词被错误设置为小写
-        # word_list = ["UNet", "US", "China", "WRF"]
-        # add_format_title_hook(word, lower_all_words=True, word_list=word_list)
+
+    # 改为仅句首单词的首字母大写时，你可以给出一个专有名词列表，noterools 会检测其中的专有名词，防止这些名词被错误设置为小写
+    # word_list = ["UNet", "US", "China", "WRF"]
+    # add_format_title_hook(word, lower_all_words=True, word_list=word_list)
 ```

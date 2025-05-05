@@ -68,5 +68,9 @@ class HookNotRegisteredError(NoteroolsBasicError):
     pass
 
 
+class ZoteroNotInitError(NoteroolsBasicError):
+    pass
+
+
 __all__ = ["NoteroolsBasicError", "AddBookmarkError", "AddHyperlinkError", "ContextError", "HookTypeError", "ArticleNotFoundError", "TitleNotFoundError", "AuthorNotFoundError",
-           "ParamsError", "HookNotRegisteredError"]
+           "ParamsError", "HookNotRegisteredError", "ZoteroNotInitError"]

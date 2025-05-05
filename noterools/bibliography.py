@@ -4,15 +4,11 @@ from typing import Optional
 from rich.progress import Progress
 
 from .csl import GetCSLJsonHook, add_get_csl_json_hook
-from .error import ParamsError, HookNotRegisteredError
+from .error import HookNotRegisteredError, ParamsError
 from .hook import ExtensionHookBase, HOOKTYPE, HookBase
 from .utils import logger
 from .word import Word
-
-
-def _find_page_num_section(text: str) -> list[str]:
-    pattern = r"\s\d{1,4}-\d{1,4}[\+\d{1,4}]*[\.,]{1}"
-    return re.findall(pattern, text)
+from .zotero import zotero_check_initialized, zotero_query_pages
 
 
 def _find_words(text: str, words_list: list[str]):
@@ -72,26 +68,36 @@ class BibLoopHook(HookBase):
 
         super().__init__(name="BibLoopHook")
         self._hook_dict: dict[str, ExtensionHookBase] = {}
+        self._low_priority_hook_dict: dict[str, ExtensionHookBase] = {}
         self._fields_list = []
 
-    def set_hook(self, hook: ExtensionHookBase):
+    def set_hook(self, hook: ExtensionHookBase, low_priority=False):
         """
         Set extension hook.
         Only accept HOOKTYPE.IN_ITERATE type.
 
         :param hook: ExtensionHookBase type hook.
         :type hook: ExtensionHookBase
+        :param low_priority: If True, call this hook after other hooks.
+        :type low_priority: bool
         :return:
         :rtype:
         """
         if hook.is_registered():
             return
 
-        if hook.name in self._hook_dict:
-            logger.warning(f"Hook {hook.name} won't be added because a hook with same name exists.")
-            return
+        if low_priority:
+            if hook.name in self._low_priority_hook_dict:
+                logger.warning(f"Hook {hook.name} won't be added because a hook with same name exists.")
+                return
+            self._low_priority_hook_dict.update({hook.name: hook})
 
-        self._hook_dict.update({hook.name: hook})
+        else:
+            if hook.name in self._hook_dict:
+                logger.warning(f"Hook {hook.name} won't be added because a hook with same name exists.")
+                return
+            self._hook_dict.update({hook.name: hook})
+
         hook.finish_register()
 
     def update_hook(self, hook: ExtensionHookBase):
@@ -108,10 +114,15 @@ class BibLoopHook(HookBase):
             return
 
         if hook.name in self._hook_dict:
+            self._hook_dict.update({hook.name: hook})
+
+        elif hook.name in self._low_priority_hook_dict:
+            self._low_priority_hook_dict.update({hook.name: hook})
+
+        else:
             logger.warning(f"Hook {hook.name} doesn't exist.")
             return
 
-        self._hook_dict.update({hook.name: hook})
         hook.finish_register()
 
     def remove_hook(self, name: str):
@@ -125,6 +136,9 @@ class BibLoopHook(HookBase):
         """
         if name in self._hook_dict:
             self._hook_dict.pop(name)
+
+        if name in self._low_priority_hook_dict:
+            self._low_priority_hook_dict.pop(name)
 
     def on_iterate(self, word, field):
         if "ADDIN ZOTERO_BIBL" in field.Code.Text:
@@ -157,8 +171,10 @@ class BibLoopHook(HookBase):
                     progress.advance(pid, advance=1)
 
                     for _hook_name in self._hook_dict:
-                        logger.debug(f"Call hook: {_hook_name}")
                         self._hook_dict[_hook_name].on_iterate(word, _paragraph.Range)
+
+                    for _hook_name in self._low_priority_hook_dict:
+                        self._low_priority_hook_dict[_hook_name].on_iterate(word, _paragraph.Range)
 
 
 def add_bib_loop_hook(word: Word) -> BibLoopHook:
@@ -305,21 +321,66 @@ class BibUpdateDashSymbolHook(ExtensionHookBase):
         :type font_family: 
         """
         super().__init__("BibUpdateDashSymbolHook")
+        zotero_check_initialized("BibUpdateDashSymbolHook")
+
         self.font_family = font_family
         self._fields_list = []
+        self._get_cls_json_hook = GetCSLJsonHook()
+
+        # we need ``GetCSLJsonHook`` to be registered.
+        _check_get_csl_json_hook(self.name, self._get_cls_json_hook)
+
+        # used to match the citation with bibliography.
+        self._item_info_list: Optional[list[tuple[str, str, str, str, str, str]]] = None
+
+    def _get_item_id(self, bib_text: str) -> str:
+        """
+        Get item id of the article.
+
+        :param bib_text: Text of the bibliography.
+        :type bib_text: str
+        :return: Item ID.
+        :rtype: str
+        """
+        if self._item_info_list is None:
+            csl_json_dict = self._get_cls_json_hook.get_csl_jsons()
+            # [("title", "container title", "first author name", "publisher", "language", "item id"), ...]
+            self._item_info_list = [
+                (
+                    csl_json.get_title(), csl_json.get_container_title(), csl_json.get_author_names(language=csl_json.get_language(defaults="cn"))[0],
+                    csl_json.get_publisher(), csl_json.get_language(defaults="cn"), item_id
+                ) for item_id, csl_json in csl_json_dict.items()
+            ]
+
+        item_id = ""
+
+        for index, _tuple in enumerate(self._item_info_list):
+            _title, _container_title, _author, _publisher, _language, _item_id = _tuple
+
+            # we have to check following things to make sure this is the article we find for bibliography
+            # 1. bib text contains article's title.
+            # 2. bib text contains article's container title (container title will be `""` if your Zotero doesn't have information about it).
+            # 3. bib text contains the first author's name.
+            # 4. article's title must match the title in bib text perfectly.
+            if _title in bib_text and _container_title in bib_text and _author in bib_text and f"{_title} " not in bib_text:
+                item_id = _item_id
+                self._item_info_list.pop(index)
+                break
+
+        return item_id
 
     def on_iterate(self, word: Word, word_range):
         _bib_text: str = word_range.Text
+        item_id = self._get_item_id(_bib_text)
+        page_num_section_text = zotero_query_pages(item_id)
 
-        # find the page number section
-        res = _find_page_num_section(_bib_text)
-        if len(res) == 0:
+        if page_num_section_text == "":
             return
-        elif len(res) > 1:
-            logger.warning(f"Find multiple page number sections, use the last one: {res}")
-            page_num_section_text = res[-1]
-        else:
-            page_num_section_text = res[0]
+
+        if "-" not in page_num_section_text:
+            return
+
+        logger.debug(f"Page num is: '{page_num_section_text}'")
 
         _bib_text_list = _bib_text.split(page_num_section_text)
 
@@ -545,7 +606,7 @@ def add_format_title_hook(word: Word, upper_first_char=False, upper_all_words=Fa
     add_get_csl_json_hook(word)
     bib_format_title_hook = BibFormatTitleHook(upper_first_char, upper_all_words, lower_all_words, word_list)
     bib_loop_hook = add_bib_loop_hook(word)
-    bib_loop_hook.set_hook(bib_format_title_hook)
+    bib_loop_hook.set_hook(bib_format_title_hook, low_priority=True)
 
     return bib_format_title_hook
 
