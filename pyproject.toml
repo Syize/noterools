@@ -4,7 +4,7 @@ requires = ["meson-python"]
 
 [project]
 name = "noterools"
-version = "1.1.0"
+version = "1.1.1"
 readme = "README_EN.md"
 license = { text = "GPL-3.0-or-later" }
 requires-python = '>=3.10'
@@ -14,7 +14,7 @@ maintainers = [
 ]
 keywords = [ "Zotero", ]
 description = "Not just zotero tools."
-dependencies = ["pywin32", "rich"]
+dependencies = ["pywin32", "rich", "pyzotero"]
 
 [project.urls]
 homepage = "https://github.com/Syize/link-zotero-citation-bibliography"
