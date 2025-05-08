@@ -63,9 +63,11 @@ if __name__ == '__main__':
         # 为正文中以 Figure 开头的交叉引用字体设置蓝色和粗体
         add_cross_ref_style_hook(word, color=16711680, bold=True, key_word=["Figure"])
 
-        # 修正 "-" 符号，你需要提供你的 Zotero ID 和 Zotero API key。
+        # 修正 "-" 符号。
+        # 如果想使用这项功能，你需要调用 zotero_init_client 函数初始化与 Zotero 通信的客户端。
         # 请参考 pyzotero 的文档获取你的 Zotero ID 和申请 API key。
         # https://pyzotero.readthedocs.io/en/latest/#getting-started-short-version
+        # zotero_init_client(zotero_id="你的 Zotero ID", zotero_api_key="你的 Zotero API key")
         # add_update_dash_symbol_hook(word, "你的 ID", "你的 key")
 
         # 将英文标题改为全部大写

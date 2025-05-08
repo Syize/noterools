@@ -326,6 +326,8 @@ class BibUpdateDashSymbolHook(ExtensionHookBase):
         self.font_family = font_family
         self._fields_list = []
         self._get_cls_json_hook = GetCSLJsonHook()
+        self.hyphen = "-"
+        self.en_dash = "–"
 
         # we need ``GetCSLJsonHook`` to be registered.
         _check_get_csl_json_hook(self.name, self._get_cls_json_hook)
@@ -377,7 +379,14 @@ class BibUpdateDashSymbolHook(ExtensionHookBase):
         if page_num_section_text == "":
             return
 
-        if "-" not in page_num_section_text:
+        if self.hyphen not in page_num_section_text and page_num_section_text in _bib_text:
+            return
+
+        # need extra check, sometimes we got en_dash from Zotero but hyphen in bib text.
+        if self.en_dash in page_num_section_text:
+            page_num_section_text = page_num_section_text.replace(self.en_dash, self.hyphen)
+
+        if page_num_section_text not in _bib_text:
             return
 
         logger.debug(f"Page num is: '{page_num_section_text}'")

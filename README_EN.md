@@ -65,9 +65,11 @@ if __name__ == '__main__':
         # Set the font color and bold style for cross-references starting with 'Figure' in the main contents.
         add_cross_ref_style_hook(word, color=16711680, bold=True, key_word=["Figure"])
 
-        # Replace the hyphen with en dash, you need to provide your Zotero ID and Zotero API key.
+        # Replace the hyphen with en dash.
+        # To use this feature, you need to call `zotero_init_client` to initialize the client to communicate with Zotero.
         # Please refer to the pyzotero documentation to find your Zotero ID and apply for an API key.
         # https://pyzotero.readthedocs.io/en/latest/#getting-started-short-version
+        # zotero_init_client(zotero_id="Your Zotero ID", zotero_api_key="Your Zotero API key")
         # add_update_dash_symbol_hook(word, "Your ID", "Your key")
 
         # Change English articles' title format to All CAPS.
