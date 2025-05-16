@@ -5,7 +5,7 @@ from typing import Optional
 from rich.progress import Progress
 
 from .csl import GetCSLJsonHook, add_get_csl_json_hook
-from .error import HookNotRegisteredError, ParamsError
+from .error import AddHyperlinkError, HookNotRegisteredError, ParamsError
 from .hook import ExtensionHookBase, HOOKTYPE, HookBase
 from .utils import logger, find_urls
 from .word import Word
@@ -648,7 +648,7 @@ class BibURLHyperlinkHook(ExtensionHookBase):
         :param word_range: Range object of the bibliography entry.
         :type word_range: object
         """
-        bib_text = word_range.Text
+        bib_text = word_range.Text      # type: ignore
         
         # Find URLs in the bibliography text
         url_positions = find_urls(bib_text)
@@ -661,7 +661,7 @@ class BibURLHyperlinkHook(ExtensionHookBase):
         # Process URLs in reverse order to maintain position integrity
         for start_pos, end_pos, url in reversed(url_positions):
             # Create a duplicate range for the URL
-            url_range = word_range.Duplicate
+            url_range = word_range.Duplicate    # type: ignore
             
             # Move start and end positions to isolate just the URL text
             url_range.MoveStart(Unit=1, Count=start_pos)

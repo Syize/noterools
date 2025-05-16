@@ -107,7 +107,7 @@ class CitationHyperlinkHook(HookBase):
                     text = oRange.Text
                     oRange.MoveStart(Unit=1, Count=-20)
                     oRange.MoveEnd(Unit=1, Count=20)
-                    logger.warning(f"Can't set hyperlinks for [{text}] in {oRange.Text}")
+                    logger.warning(f"Can't set hyperlinks for '{text}' in {oRange.Text}")
                     oRange.MoveStart(Unit=1, Count=20)
                     oRange.MoveEnd(Unit=1, Count=-20)
 
