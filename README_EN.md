@@ -84,4 +84,10 @@ if __name__ == '__main__':
     # You can give a list contains proper noun when change format to Sentence Case.
     # word_list = ["UNet", "US", "China", "WRF"]
     # add_format_title_hook(word, lower_all_words=True, word_list=word_list)
+
+    # Add hyperlinks to URLs in bibliography
+    # add_url_hyperlink_hook(word)
+
+    # And customize URL appearance (parameters are optional)
+    # add_url_hyperlink_hook(word, color=16711680, no_under_line=False)
 ```

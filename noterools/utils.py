@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 import re
 
@@ -41,4 +42,38 @@ def get_year_list(text: str) -> list[str]:
     return re.findall(pattern, text)
 
 
-__all__ = ["logger", "replace_invalid_char", "get_year_list"]
+def find_urls(text: str) -> list[tuple[int, int, str]]:
+    """
+    Find URLs in text and return their positions and values.
+    
+    :param text: The text to search
+    :type text: str
+    :return: List of tuples (start_pos, end_pos, url)
+    :rtype: list[tuple[int, int, str]]
+    """
+    # Pattern to match common URL formats, excluding trailing punctuation
+    url_pattern = r'(https?://(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*))'
+    
+    # Pattern to match DOIs, excluding trailing punctuation
+    doi_pattern = r'(doi\.org/[0-9a-zA-Z./\-_]+)'
+    
+    # Combine patterns
+    combined_pattern = f"{url_pattern}|{doi_pattern}"
+    
+    urls = []
+    for match in re.finditer(combined_pattern, text):
+        start, end = match.span()
+        url = match.group(0)
+        
+        # Remove trailing punctuation
+        while url and url[-1] in '.,:;)]}"\'':
+            url = url[:-1]
+            end -= 1
+        
+        if url:  # Only add if URL is not empty after processing
+            urls.append((start, end, url))
+    
+    return urls
+
+
+__all__ = ["logger", "replace_invalid_char", "get_year_list", "find_urls"]

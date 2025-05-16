@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 from typing import Optional
 
@@ -6,7 +7,7 @@ from rich.progress import Progress
 from .csl import GetCSLJsonHook, add_get_csl_json_hook
 from .error import HookNotRegisteredError, ParamsError
 from .hook import ExtensionHookBase, HOOKTYPE, HookBase
-from .utils import logger
+from .utils import logger, find_urls
 from .word import Word
 from .zotero import zotero_check_initialized, zotero_query_pages
 
@@ -620,5 +621,87 @@ def add_format_title_hook(word: Word, upper_first_char=False, upper_all_words=Fa
     return bib_format_title_hook
 
 
-__all__ = ["BibLoopHook", "BibBookmarkHook", "BibUpdateDashSymbolHook", "BibFormatTitleHook", "add_bib_loop_hook", "add_bib_bookmark_hook", "add_update_dash_symbol_hook",
-           "add_format_title_hook"]
+class BibURLHyperlinkHook(ExtensionHookBase):
+    """
+    This extension hook adds hyperlinks to URLs in your bibliography.
+    """
+    
+    def __init__(self, color: int = None, no_under_line=False):
+        """
+        Initialize the URL hyperlink hook.
+
+        :param color: Set font color for URLs. Defaults to None (keep original color).
+        :type color: int
+        :param no_under_line: If remove the underline of hyperlinks. Defaults to False.
+        :type no_under_line: bool
+        """
+        super().__init__(name="BibURLHyperlinkHook")
+        self.color = color
+        self.no_under_line = no_under_line
+
+    def on_iterate(self, word: Word, word_range):
+        """
+        Process each bibliography entry to find and hyperlink URLs.
+
+        :param word: Word object.
+        :type word: Word
+        :param word_range: Range object of the bibliography entry.
+        :type word_range: object
+        """
+        bib_text = word_range.Text
+        
+        # Find URLs in the bibliography text
+        url_positions = find_urls(bib_text)
+        
+        if not url_positions:
+            return
+            
+        logger.debug(f"Found {len(url_positions)} URLs in bibliography entry")
+        
+        # Process URLs in reverse order to maintain position integrity
+        for start_pos, end_pos, url in reversed(url_positions):
+            # Create a duplicate range for the URL
+            url_range = word_range.Duplicate
+            
+            # Move start and end positions to isolate just the URL text
+            url_range.MoveStart(Unit=1, Count=start_pos)
+            url_range.MoveEnd(Unit=1, Count=-(len(bib_text) - end_pos))
+            
+            try:
+                # Add hyperlink to the URL
+                word.add_hyperlink(url, url_range, no_under_line=self.no_under_line)
+                
+                # Set color if specified (after adding hyperlink)
+                if self.color is not None:
+                    url_range.Font.Color = self.color
+                    
+                logger.debug(f"Added hyperlink for URL: {url}")
+                
+            except AddHyperlinkError:
+                logger.warning(f"Failed to add hyperlink for URL: {url}")
+
+
+def add_url_hyperlink_hook(word: Word, color: int = None, no_under_line=False) -> BibURLHyperlinkHook:
+    """
+    Register ``BibURLHyperlinkHook`` to add hyperlinks to URLs in bibliography.
+
+    :param word: ``noterools.word.Word`` object.
+    :type word: Word
+    :param color: Set font color for URLs. Defaults to None (keep original color).
+    :type color: int
+    :param no_under_line: If remove the underline of hyperlinks. Defaults to False.
+    :type no_under_line: bool
+    :return: ``BibURLHyperlinkHook`` instance.
+    :rtype: BibURLHyperlinkHook
+    """
+    add_get_csl_json_hook(word)  # In case it's needed for future functionality
+    url_hyperlink_hook = BibURLHyperlinkHook(color, no_under_line)
+    bib_loop_hook = add_bib_loop_hook(word)
+    bib_loop_hook.set_hook(url_hyperlink_hook)
+    
+    return url_hyperlink_hook
+
+
+__all__ = ["BibLoopHook", "BibBookmarkHook", "BibUpdateDashSymbolHook", "BibFormatTitleHook", 
+           "BibURLHyperlinkHook", "add_bib_loop_hook", "add_bib_bookmark_hook", 
+           "add_update_dash_symbol_hook", "add_format_title_hook", "add_url_hyperlink_hook"]
