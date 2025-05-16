@@ -76,4 +76,49 @@ def find_urls(text: str) -> list[tuple[int, int, str]]:
     return urls
 
 
-__all__ = ["logger", "replace_invalid_char", "get_year_list", "find_urls"]
+def parse_color(color_input):
+    """
+    Parse different color input formats and return the Word VBA Decimal color value.
+    
+    Accepts:
+    - Integer decimal value (e.g., 16711680 for blue)
+    - RGB string (e.g., "255, 0, 0" for red)
+    - Named color constant (e.g., "word_auto" for automatic color)
+    
+    :param color_input: Color in various formats
+    :type color_input: Union[int, str, None]
+    :return: Word VBA Decimal color value
+    :rtype: int or None
+    """
+    # If None, return None (keep default behavior)
+    if color_input is None:
+        return None
+        
+    # If already an integer, assume it's already a valid Decimal color value
+    if isinstance(color_input, int):
+        return color_input
+        
+    # If string, check for different formats
+    if isinstance(color_input, str):
+        # Check for named constants
+        if color_input.lower() == "word_auto":
+            return -16777216  # wdColorAutomatic
+            
+        # Check for RGB format (e.g., "255, 0, 0")
+        try:
+            # Split by comma and strip whitespace
+            rgb_values = [int(x.strip()) for x in color_input.split(",")]
+            
+            # If we have 3 values between 0-255, treat as RGB
+            if len(rgb_values) == 3 and all(0 <= x <= 255 for x in rgb_values):
+                r, g, b = rgb_values
+                # Convert to Word Decimal format: B × 2^16 + G × 2^8 + R
+                return (b << 16) + (g << 8) + r
+        except (ValueError, TypeError):
+            pass
+            
+    # If we reach here, the input format is invalid
+    raise ValueError(f"Invalid color format: {color_input}. Use an integer Decimal value, RGB string (e.g., '255, 0, 0'), or 'word_auto'.")
+
+
+__all__ = ["logger", "replace_invalid_char", "get_year_list", "find_urls", "parse_color"]

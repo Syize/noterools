@@ -7,7 +7,7 @@ from rich.progress import Progress
 from .csl import GetCSLJsonHook, add_get_csl_json_hook
 from .error import AddHyperlinkError, HookNotRegisteredError, ParamsError
 from .hook import ExtensionHookBase, HOOKTYPE, HookBase
-from .utils import logger, find_urls
+from .utils import logger, find_urls, parse_color
 from .word import Word
 from .zotero import zotero_check_initialized, zotero_query_pages
 
@@ -626,17 +626,19 @@ class BibURLHyperlinkHook(ExtensionHookBase):
     This extension hook adds hyperlinks to URLs in your bibliography.
     """
     
-    def __init__(self, color: int = None, no_under_line=False):
+    def __init__(self, color=None, no_under_line=False):
         """
         Initialize the URL hyperlink hook.
 
-        :param color: Set font color for URLs. Defaults to None (keep original color).
-        :type color: int
+        :param color: Set font color for URLs. Accepts integer decimal value (e.g., 16711680 for blue), 
+                     RGB string (e.g., "255, 0, 0" for red), or "word_auto" for automatic color.
+                     Defaults to None (keep original color).
+        :type color: Union[int, str, None]
         :param no_under_line: If remove the underline of hyperlinks. Defaults to False.
         :type no_under_line: bool
         """
         super().__init__(name="BibURLHyperlinkHook")
-        self.color = color
+        self.color = parse_color(color)  # Use parse_color
         self.no_under_line = no_under_line
 
     def on_iterate(self, word: Word, word_range):
@@ -681,20 +683,22 @@ class BibURLHyperlinkHook(ExtensionHookBase):
                 logger.warning(f"Failed to add hyperlink for URL: {url}")
 
 
-def add_url_hyperlink_hook(word: Word, color: int = None, no_under_line=False) -> BibURLHyperlinkHook:
+def add_url_hyperlink_hook(word: Word, color=None, no_under_line=False) -> BibURLHyperlinkHook:
     """
     Register ``BibURLHyperlinkHook`` to add hyperlinks to URLs in bibliography.
 
     :param word: ``noterools.word.Word`` object.
     :type word: Word
-    :param color: Set font color for URLs. Defaults to None (keep original color).
-    :type color: int
+    :param color: Set font color for URLs. Accepts integer decimal value (e.g., 16711680 for blue), 
+                 RGB string (e.g., "255, 0, 0" for red), or "word_auto" for automatic color.
+                 Defaults to None (keep original color).
+    :type color: Union[int, str, None]
     :param no_under_line: If remove the underline of hyperlinks. Defaults to False.
     :type no_under_line: bool
     :return: ``BibURLHyperlinkHook`` instance.
     :rtype: BibURLHyperlinkHook
     """
-    add_get_csl_json_hook(word)  # In case it's needed for future functionality
+    add_get_csl_json_hook(word)
     url_hyperlink_hook = BibURLHyperlinkHook(color, no_under_line)
     bib_loop_hook = add_bib_loop_hook(word)
     bib_loop_hook.set_hook(url_hyperlink_hook)

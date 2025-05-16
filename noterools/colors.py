@@ -1,5 +1,5 @@
 from .hook import HookBase
-from .utils import logger
+from .utils import logger, parse_color
 from .word import Word
 
 
@@ -7,12 +7,11 @@ class CrossRefStyleHook(HookBase):
     """
     Set style of cross-reference.
     """
-    def __init__(self, color: int = None, bold=False, key_word: list[str] = None):
+    def __init__(self, color=None, bold=False, key_word: list[str] = None):
         super().__init__(f"CrossRefStyleHook")
 
         if key_word is None:
             self.key_word = [""]
-
         else:
             if len(key_word) > 1 and "" in key_word:
                 logger.warning("Found empty string in your keyword. It can cause noterools to change all of your cross references")
@@ -21,7 +20,7 @@ class CrossRefStyleHook(HookBase):
 
             self.key_word = key_word
 
-        self.color = color
+        self.color = parse_color(color)  # Use parse_color
         self.bold = bold
 
     def on_iterate(self, word, field):
@@ -55,22 +54,25 @@ class CrossRefStyleHook(HookBase):
         field.Update()
 
 
-def add_cross_ref_style_hook(word: Word, color: int = 16711680, bold=False, key_word: list[str] = None) -> CrossRefStyleHook:
+def add_cross_ref_style_hook(word: Word, color=16711680, bold=False, key_word: list[str] = None) -> CrossRefStyleHook:
     """
     Set font style of the cross-reference.
 
     :param word: ``noterools.word.Word`` object.
     :type word: Word
-    :param color: Set font color. Defaults to ``blue (16711680)``. You can look up the value at `VBA Documentation
-                  <https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor>`_.
-    :type color: int
+    :param color: Set font color. Accepts integer decimal value (e.g., 16711680 for blue), 
+                 RGB string (e.g., "255, 0, 0" for red), or "word_auto" for automatic color.
+                 Defaults to blue (16711680).
+                 You can look up the values at `VBA Documentation
+                 <https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor>`_.
+    :type color: Union[int, str]
     :param bold: If you make font bold. Defaults to False.
     :type bold: bool
-    :param key_word: A key word list. noterools only change the cross-ref's style which contains the key word you specify, for example, ``["Fig.", "Tab."]``.
-                     noterools will change all cross-refs style if ``ket_word == None``.
+    :param key_word: A key word list. noterools only change the cross-ref's style which contains the key word you specify, 
+                     for example, ``["Fig.", "Tab."]``. noterools will change all cross-refs style if ``key_word == None``.
     :type key_word: list
-    :return:
-    :rtype:
+    :return: The hook instance
+    :rtype: CrossRefStyleHook
     """
     if key_word is None:
         logger.warning("Set style for all cross references because `key_word` is None")

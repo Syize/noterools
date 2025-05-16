@@ -4,7 +4,7 @@ from os.path import basename
 from .csl import CSLJson
 from .error import AddHyperlinkError
 from .hook import HookBase
-from .utils import get_year_list, logger, replace_invalid_char
+from .utils import get_year_list, logger, replace_invalid_char, parse_color
 from .word import Word
 
 
@@ -13,10 +13,10 @@ class CitationHyperlinkHook(HookBase):
     Hook to add hyperlinks to citations.
     """
 
-    def __init__(self, is_numbered=False, color: int = None, no_under_line=True):
+    def __init__(self, is_numbered=False, color=None, no_under_line=True):
         super().__init__("CitationHyperlinkHook")
         self.is_numbered = is_numbered
-        self.color = color
+        self.color = parse_color(color)  # Use parse_color
         self.no_under_line = no_under_line
 
     def on_iterate(self, word_obj: Word, field):
@@ -120,7 +120,7 @@ class CitationHyperlinkHook(HookBase):
             color_range.MoveEnd(Unit=1, Count=1)
 
 
-def add_citation_hyperlink_hook(word: Word, is_numbered=False, color: int = None, no_under_line=True) -> CitationHyperlinkHook:
+def add_citation_hyperlink_hook(word: Word, is_numbered=False, color=None, no_under_line=True) -> CitationHyperlinkHook:
     """
     Register ``CitationHyperlinkHook``.
 
@@ -128,8 +128,10 @@ def add_citation_hyperlink_hook(word: Word, is_numbered=False, color: int = None
     :type word: Word
     :param is_numbered: If your citation is numbered. Defaults to False.
     :type is_numbered: bool
-    :param color: Set font color. You can look up the value at `VBA Documentation <https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor>`_.
-    :type color: int
+    :param color: Set font color. Accepts integer decimal value (e.g., 16711680 for blue), 
+                 RGB string (e.g., "255, 0, 0" for red), or "word_auto" for automatic color.
+                 You can look up the values at `VBA Documentation <https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor>`_.
+    :type color: Union[int, str, None]
     :param no_under_line: If remove the underline of hyperlinks. Defaults to True.
     :type no_under_line: bool
     :return: ``CitationHyperlinkHook`` instance.
