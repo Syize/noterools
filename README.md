@@ -82,4 +82,10 @@ if __name__ == '__main__':
     # 改为仅句首单词的首字母大写时，你可以给出一个专有名词列表，noterools 会检测其中的专有名词，防止这些名词被错误设置为小写
     # word_list = ["UNet", "US", "China", "WRF"]
     # add_format_title_hook(word, lower_all_words=True, word_list=word_list)
+
+    # 为参考文献目录表中出现的网址添加超链接
+    # add_url_hyperlink_hook(word)
+
+    # 自定义超链接的颜色以及是否添加下划线 (参数可选)
+    # add_url_hyperlink_hook(word, color=16711680, no_under_line=False)
 ```
