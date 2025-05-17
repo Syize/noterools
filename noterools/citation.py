@@ -70,7 +70,8 @@ class CitationHyperlinkHook(HookBase):
                         oRange.MoveStart(Unit=1, Count=len(authors_text))
                         oRange.MoveEnd(Unit=1, Count=-len(citation_text_left))
                     else:
-                        # "Author, Date" will have hyperlink
+                        # "Author, Date" will have hyperlink, but we have to exclude brackets
+                        oRange.MoveStart(Unit=1, Count=1) # Move after the left bracket
                         oRange.MoveEnd(Unit=1, Count=-len(citation_text_left))  
                     is_first = False
                 else:
