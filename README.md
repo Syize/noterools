@@ -48,7 +48,8 @@ if __name__ == '__main__':
 
         # 为 (作者, 年份) 引用格式添加超链接，设置引用为蓝色。
         # 默认会将参考文献表中没有被正确设置为斜体的刊物名称或出版商设置为斜体
-        # add_citation_cross_ref_hook(word, is_numbered=False)
+        # 默认情况下，只有年份部分会添加超链接，设置 full_citation_hyperlink=True 可以让整个引用(作者+年份)都添加超链接
+        # add_citation_cross_ref_hook(word, is_numbered=False, full_citation_hyperlink=True)
 
         # 通过设置 color 的值，可以设置整个引用的颜色(不包含括号)
         # 0: 黑色

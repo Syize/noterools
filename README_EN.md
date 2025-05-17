@@ -50,7 +50,8 @@ if __name__ == '__main__':
 
         # Add hyperlinks to (Author, Year) citation format, set the citation font color to blue.
         # By default, container titles or publishers in the bibliography that are not correctly italicized will be set to italics.
-        # add_citation_cross_ref_hook(word, is_numbered=False)
+        # By default, only the year portion is hyperlinked. Set full_citation_hyperlink=True to make the entire citation (author+year) hyperlinked
+        # add_citation_cross_ref_hook(word, is_numbered=False, full_citation_hyperlink=True)
 
         # By setting the value of color, you can change the color of the entire citation (excluding the parentheses).
         # 0: Black

@@ -13,11 +13,12 @@ class CitationHyperlinkHook(HookBase):
     Hook to add hyperlinks to citations.
     """
 
-    def __init__(self, is_numbered=False, color=None, no_under_line=True):
+    def __init__(self, is_numbered=False, color=None, no_under_line=True, full_citation_hyperlink=False):
         super().__init__("CitationHyperlinkHook")
         self.is_numbered = is_numbered
         self.color = parse_color(color)  # Use parse_color
         self.no_under_line = no_under_line
+        self.full_citation_hyperlink = full_citation_hyperlink
 
     def on_iterate(self, word_obj: Word, field):
         if "ADDIN ZOTERO_ITEM" not in field.Code.Text:
@@ -64,10 +65,14 @@ class CitationHyperlinkHook(HookBase):
 
                 # move range to the next year string
                 if is_first:
-                    oRange.MoveStart(Unit=1, Count=len(authors_text))
-                    oRange.MoveEnd(Unit=1, Count=-len(citation_text_left))
+                    if not self.full_citation_hyperlink:
+                        # Default: Only "Year" will have hyperlink
+                        oRange.MoveStart(Unit=1, Count=len(authors_text))
+                        oRange.MoveEnd(Unit=1, Count=-len(citation_text_left))
+                    else:
+                        # "Author, Date" will have hyperlink
+                        oRange.MoveEnd(Unit=1, Count=-len(citation_text_left))  
                     is_first = False
-
                 else:
                     # 5 just works, don't know why.
                     oRange.MoveEnd(Unit=1, Count=len(authors_text) + 5)
@@ -120,7 +125,7 @@ class CitationHyperlinkHook(HookBase):
             color_range.MoveEnd(Unit=1, Count=1)
 
 
-def add_citation_hyperlink_hook(word: Word, is_numbered=False, color=None, no_under_line=True) -> CitationHyperlinkHook:
+def add_citation_hyperlink_hook(word: Word, is_numbered=False, color=None, no_under_line=True, full_citation_hyperlink=False) -> CitationHyperlinkHook:
     """
     Register ``CitationHyperlinkHook``.
 
@@ -134,10 +139,12 @@ def add_citation_hyperlink_hook(word: Word, is_numbered=False, color=None, no_un
     :type color: Union[int, str, None]
     :param no_under_line: If remove the underline of hyperlinks. Defaults to True.
     :type no_under_line: bool
+    :param full_citation_hyperlink: If True, the entire citation (author and year) will be hyperlinked for the first reference in multiple citations. For subsequent references in the same citation block, only the year will be hyperlinked due to technical limitations. Defaults to False (only year is hyperlinked).
+    :type full_citation_hyperlink: bool
     :return: ``CitationHyperlinkHook`` instance.
     :rtype: CitationHyperlinkHook
     """
-    citation_hyperlink_hook = CitationHyperlinkHook(is_numbered, color, no_under_line)
+    citation_hyperlink_hook = CitationHyperlinkHook(is_numbered, color, no_under_line, full_citation_hyperlink)
     word.set_hook(citation_hyperlink_hook)
 
     return citation_hyperlink_hook
