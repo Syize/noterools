@@ -35,7 +35,7 @@ pip install noterools
 2. 创建一个 Python 脚本并运行。以下是一个简单的示例
 
 ```python
-from noterools import Word, add_cross_ref_style_hook
+from noterools import Word, add_cross_ref_style_hook, add_url_hyperlink_hook
 from noterools._entry import add_citation_cross_ref_hook
 
 if __name__ == '__main__':
@@ -48,13 +48,18 @@ if __name__ == '__main__':
 
         # 为 (作者, 年份) 引用格式添加超链接，设置引用为蓝色。
         # 默认会将参考文献表中没有被正确设置为斜体的刊物名称或出版商设置为斜体
-        # add_citation_cross_ref_hook(word, is_numbered=False)
+        # 默认情况下，只有年份部分会添加超链接，设置 full_citation_hyperlink=True 可以让整个引用(作者+年份)都添加超链接
+        # add_citation_cross_ref_hook(word, is_numbered=False, full_citation_hyperlink=True)
 
         # 通过设置 color 的值，可以设置整个引用的颜色(不包含括号)
         # 0: 黑色
         # 16711680: 蓝色
         # 更多颜色请参考 Word 中的颜色枚举类型: https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor
         # add_citation_cross_ref_hook(word, is_numbered=False, color=0)
+        # 或者使用 RGB 值
+        # add_cross_ref_style_hook(word, is_numbered=False, color="0, 0, 255")
+        # 或者设为 Microsoft Word 中的“自动”，该颜色在浅色模式下为黑色，深色模式下为白色
+        # add_cross_ref_style_hook(word, is_numbered=False, color="word_auto")
 
         # set_container_title_italic 用于控制是否修正参考文献表中没有正确设置为斜体的名称
         # 你可以通过将其设置为 False 来关闭这项功能
@@ -79,13 +84,13 @@ if __name__ == '__main__':
         # 将英文标题改为仅句首单词的首字母大写
         # add_format_title_hook(word, lower_all_words=True)
 
-    # 改为仅句首单词的首字母大写时，你可以给出一个专有名词列表，noterools 会检测其中的专有名词，防止这些名词被错误设置为小写
-    # word_list = ["UNet", "US", "China", "WRF"]
-    # add_format_title_hook(word, lower_all_words=True, word_list=word_list)
+        # 改为仅句首单词的首字母大写时，你可以给出一个专有名词列表，noterools 会检测其中的专有名词，防止这些名词被错误设置为小写
+        # word_list = ["UNet", "US", "China", "WRF"]
+        # add_format_title_hook(word, lower_all_words=True, word_list=word_list)
 
-    # 为参考文献目录表中出现的网址添加超链接
-    # add_url_hyperlink_hook(word)
+        # 为参考文献目录表中出现的网址添加超链接
+        # add_url_hyperlink_hook(word)
 
-    # 自定义超链接的颜色以及是否添加下划线 (参数可选)
-    # add_url_hyperlink_hook(word, color=16711680, no_under_line=False)
+        # 自定义超链接的颜色以及是否添加下划线 (参数可选)
+        # add_url_hyperlink_hook(word, color=16711680, no_under_line=False)
 ```

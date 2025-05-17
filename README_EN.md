@@ -37,7 +37,7 @@ pip install noterools
 2. Create a Python script and run it. Here is a simple example.
 
 ```python
-from noterools import Word, add_cross_ref_style_hook
+from noterools import Word, add_cross_ref_style_hook, add_url_hyperlink_hook
 from noterools._entry import add_citation_cross_ref_hook
 
 if __name__ == '__main__':
@@ -50,13 +50,18 @@ if __name__ == '__main__':
 
         # Add hyperlinks to (Author, Year) citation format, set the citation font color to blue.
         # By default, container titles or publishers in the bibliography that are not correctly italicized will be set to italics.
-        # add_citation_cross_ref_hook(word, is_numbered=False)
+        # By default, only the year portion is hyperlinked. Set full_citation_hyperlink=True to make the entire citation (author+year) hyperlinked
+        # add_citation_cross_ref_hook(word, is_numbered=False, full_citation_hyperlink=True)
 
         # By setting the value of color, you can change the color of the entire citation (excluding the parentheses).
         # 0: Black
         # 16711680: Blues
         # For more colors, please see: https://learn.microsoft.com/en-us/office/vba/api/word.wdcolor
         # add_citation_cross_ref_hook(word, is_numbered=False, color=0)
+        # Or input RGB value instead
+        # add_cross_ref_style_hook(word, is_numbered=False, color="0, 0, 255")
+        # Or change to "Automatic" in Microsoft Word
+        # add_cross_ref_style_hook(word, is_numbered=False, color="word_auto")
 
         # set_container_title_italic is used to control whether to correct names in the bibliography that are not properly italicized.
         # You can disable this feature by setting it to False.
@@ -81,13 +86,13 @@ if __name__ == '__main__':
         # Change English articles' title format to Sentence Case.
         # add_format_title_hook(word, lower_all_words=True)
 
-    # You can give a list contains proper noun when change format to Sentence Case.
-    # word_list = ["UNet", "US", "China", "WRF"]
-    # add_format_title_hook(word, lower_all_words=True, word_list=word_list)
+        # You can give a list contains proper noun when change format to Sentence Case.
+        # word_list = ["UNet", "US", "China", "WRF"]
+        # add_format_title_hook(word, lower_all_words=True, word_list=word_list)
 
-    # Add hyperlinks to URLs in bibliography
-    # add_url_hyperlink_hook(word)
+        # Add hyperlinks to URLs in bibliography
+        # add_url_hyperlink_hook(word)
 
-    # And customize URL appearance (parameters are optional)
-    # add_url_hyperlink_hook(word, color=16711680, no_under_line=False)
+        # And customize URL appearance (parameters are optional)
+        # add_url_hyperlink_hook(word, color=16711680, no_under_line=False)
 ```
