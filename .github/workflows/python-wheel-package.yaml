@@ -1,8 +1,8 @@
 name: Build and Upload wheel
 
 on:
+  workflow_dispatch:
   release:
-    workflow_dispatch:
     types: [published]
 
 jobs:
