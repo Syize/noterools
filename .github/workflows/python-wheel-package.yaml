@@ -31,6 +31,29 @@ jobs:
           name: ${{ matrix.python }}-${{ matrix.platform[1] }}
           path: ./wheelhouse/*.whl
 
+  pypi-publish:
+    name: Upload package to pypi
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        platform:
+          - [ windows-latest, win_amd64]
+          - [ windows-latest, win32]
+        python: ["cp310", "cp311", "cp312", "cp313"]
+
+    needs:
+      - build-wheel
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Retrieve release distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.python }}-${{ matrix.platform[1] }}
+          path: ./wheelhouse
+
       - name: Publish release distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1.12
         with:
