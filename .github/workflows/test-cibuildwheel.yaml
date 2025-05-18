@@ -1,0 +1,37 @@
+name: Build and Upload wheel
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build-wheel:
+    name: Build wheel
+    runs-on: ${{ matrix.buildplat[0] }}
+
+    strategy:
+      matrix:
+        platform:
+          - [ windows-2019, win_amd64, "" ]
+          - [ windows-2019, win32, "" ]
+        python: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@faf86a6ed7efa889faf6996aa23820831055001a  # v2.23.3
+        env:
+          CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform[1] }}
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ${{ matrix.python }}-${{ matrix.platform[1] }}-${{ matrix.platform[2] }}
+          path: ./wheelhouse/*.whl
