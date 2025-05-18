@@ -1,6 +1,6 @@
 project(
     'noterools',
-    version: '1.1.2',
+    version: '1.1.3',
     license: 'BSD-3',
     meson_version: '>=0.64.0',
     default_options: ['warning_level=2'],
