@@ -8,6 +8,8 @@ jobs:
   build-sdist:
     name: Build source dist package
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
   
     steps:
       - name: Check out repository code of master branch
@@ -28,21 +30,6 @@ jobs:
 
       - name: upload dists
         uses: actions/upload-artifact@v4
-        with:
-          name: build-sdist
-          path: dist/
-
-  pypi-publish:
-    name: Upload package to pypi
-    runs-on: ubuntu-latest
-    needs:
-      - build-sdist
-    permissions:
-      id-token: write
-
-    steps:
-      - name: Retrieve release distributions
-        uses: actions/download-artifact@v4
         with:
           name: build-sdist
           path: dist/
