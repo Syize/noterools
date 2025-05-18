@@ -2,6 +2,7 @@ name: Build and Upload wheel
 
 on:
   release:
+    workflow_dispatch:
     types: [published]
 
 jobs:
