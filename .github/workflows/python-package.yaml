@@ -5,8 +5,8 @@ on:
     types: [published]
 
 jobs:
-  release-build:
-    name: Build Python Package
+  build-sdist:
+    name: Build source dist package
     runs-on: ubuntu-latest
   
     steps:
@@ -26,17 +26,17 @@ jobs:
       - name: Build Python Package
         run: python -m build --sdist ${{ github.workspace }}
 
-      - name: upload windows dists
+      - name: upload dists
         uses: actions/upload-artifact@v4
         with:
-          name: release-dists
+          name: build-sdist
           path: dist/
 
   pypi-publish:
     name: Upload package to pypi
     runs-on: ubuntu-latest
     needs:
-      - release-build
+      - build-sdist
     permissions:
       id-token: write
 
@@ -44,7 +44,7 @@ jobs:
       - name: Retrieve release distributions
         uses: actions/download-artifact@v4
         with:
-          name: release-dists
+          name: build-sdist
           path: dist/
 
       - name: Publish release distributions to PyPI
