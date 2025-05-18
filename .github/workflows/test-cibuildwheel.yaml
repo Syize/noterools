@@ -8,7 +8,7 @@ on:
 jobs:
   build-wheel:
     name: Build wheel
-    runs-on: ${{ matrix.buildplat[0] }}
+    runs-on: ${{ matrix.platform[0] }}
 
     strategy:
       matrix:
