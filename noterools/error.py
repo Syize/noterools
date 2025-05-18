@@ -72,5 +72,12 @@ class ZoteroNotInitError(NoteroolsBasicError):
     pass
 
 
+class ZoteroConnectError(NoteroolsBasicError):
+    """
+    Can't communicate with Zotero.
+    """
+    pass
+
+
 __all__ = ["NoteroolsBasicError", "AddBookmarkError", "AddHyperlinkError", "ContextError", "HookTypeError", "ArticleNotFoundError", "TitleNotFoundError", "AuthorNotFoundError",
-           "ParamsError", "HookNotRegisteredError", "ZoteroNotInitError"]
+           "ParamsError", "HookNotRegisteredError", "ZoteroNotInitError", "ZoteroConnectError"]

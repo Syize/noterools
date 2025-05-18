@@ -20,6 +20,9 @@ class CitationHyperlinkHook(HookBase):
         self.no_under_line = no_under_line
         self.full_citation_hyperlink = full_citation_hyperlink
 
+        if full_citation_hyperlink:
+            logger.warning(f"Add hyperlink to the whole citation is still a experimental feature, use it CAREFULLY.")
+
     def on_iterate(self, word_obj: Word, field):
         if "ADDIN ZOTERO_ITEM" not in field.Code.Text:
             return
@@ -76,7 +79,7 @@ class CitationHyperlinkHook(HookBase):
                     matched = False
                     for _citation in citations_list:
                         item_key = basename(_citation["uris"][0])
-                        csl_json = CSLJson(_citation["itemData"])
+                        csl_json = CSLJson(_citation["itemData"], item_key)
                         citation_year = str(csl_json.get_date().year)
                         language = csl_json.get_language(defaults="cn")
                         author_name = csl_json.get_author_names(language)[0]
@@ -163,7 +166,7 @@ class CitationHyperlinkHook(HookBase):
                     is_add_hyperlink = False
                     for _citation in citations_list:
                         item_key = basename(_citation["uris"][0])
-                        csl_json = CSLJson(_citation["itemData"])
+                        csl_json = CSLJson(_citation["itemData"], item_key)
                         citation_year = str(csl_json.get_date().year)
                         language = csl_json.get_language(defaults="cn")
                         author_name = csl_json.get_author_names(language)[0]

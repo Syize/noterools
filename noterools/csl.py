@@ -3,8 +3,8 @@ from json import loads
 from os.path import basename
 from typing import Union
 
-from .error import TitleNotFoundError, AuthorNotFoundError
-from .hook import HookBase, HOOKTYPE
+from .error import AuthorNotFoundError, TitleNotFoundError
+from .hook import HOOKTYPE, HookBase
 from .utils import logger
 from .word import Word
 
@@ -13,17 +13,21 @@ class CSLJson(dict):
     """
     A class to parse CSL JSON.
     """
-    def __init__(self, csl_json: Union[str, dict]):
+    def __init__(self, csl_json: Union[str, dict], item_id: str):
         """
         CSLJson provide some convenient methods to get article's information from CSL JSON.
 
         :param csl_json: A CSL JSON string or CSL JSON dict.
         :type csl_json: str | dict
+        :param item_id: Zotero item ID.
+        :type item_id: str
         """
         if isinstance(csl_json, str):
             csl_json = loads(csl_json)
 
         super().__init__(csl_json)
+
+        self.item_id = item_id
 
     def __getitem__(self, item: str):
         return super().__getitem__(item)
@@ -179,7 +183,7 @@ class GetCSLJsonHook(HookBase):
                 logger.debug("Add item info:")
                 logger.debug(f"Item ID: {item_id}")
                 logger.debug(_citation["itemData"])
-                self.csl_json_dict[item_id] = CSLJson(_citation["itemData"])
+                self.csl_json_dict[item_id] = CSLJson(_citation["itemData"], item_id)
 
 
 def add_get_csl_json_hook(word: Word) -> GetCSLJsonHook:

@@ -37,8 +37,7 @@ pip install noterools
 2. Create a Python script and run it. Here is a simple example.
 
 ```python
-from noterools import Word, add_cross_ref_style_hook, add_url_hyperlink_hook
-from noterools._entry import add_citation_cross_ref_hook
+from noterools import Word, add_cross_ref_style_hook, add_citation_cross_ref_hook
 
 if __name__ == '__main__':
     word_file_path = r"E:\Documents\Word\test.docx"
@@ -50,7 +49,7 @@ if __name__ == '__main__':
 
         # Add hyperlinks to (Author, Year) citation format, set the citation font color to blue.
         # By default, container titles or publishers in the bibliography that are not correctly italicized will be set to italics.
-        # By default, only the year portion is hyperlinked. Set full_citation_hyperlink=True to make the entire citation (author+year) hyperlinked
+        # By default, only the year portion is hyperlinked. Set full_citation_hyperlink=True to make the entire citation (author+year) hyperlinked. (This is still an experimental feature, and it may produce unexpected results.)
         # add_citation_cross_ref_hook(word, is_numbered=False, full_citation_hyperlink=True)
 
         # By setting the value of color, you can change the color of the entire citation (excluding the parentheses).

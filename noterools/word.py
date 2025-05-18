@@ -259,12 +259,13 @@ class Word:
             raise HookTypeError(f"Unknown hook type: {hook_type}.")
 
         if hook.is_registered(hook_type):
-            logger.debug(f"Hook '{hook.name}' is registered for hook type '{hook_type}'.")
             return
 
         if hook.name in _hook_dict:
             logger.warning(f"Hook {hook.name} won't be added because a hook with same name exists.")
             return
+
+        logger.debug(f"Hook '{hook.name}' is registered for hook type '{hook_type}'.")
 
         self._set_hook(hook, hook_type)
 

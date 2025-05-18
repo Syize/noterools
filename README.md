@@ -35,8 +35,7 @@ pip install noterools
 2. 创建一个 Python 脚本并运行。以下是一个简单的示例
 
 ```python
-from noterools import Word, add_cross_ref_style_hook, add_url_hyperlink_hook
-from noterools._entry import add_citation_cross_ref_hook
+from noterools import Word, add_cross_ref_style_hook, add_citation_cross_ref_hook
 
 if __name__ == '__main__':
     word_file_path = r"E:\Documents\Word\test.docx"
@@ -48,7 +47,7 @@ if __name__ == '__main__':
 
         # 为 (作者, 年份) 引用格式添加超链接，设置引用为蓝色。
         # 默认会将参考文献表中没有被正确设置为斜体的刊物名称或出版商设置为斜体
-        # 默认情况下，只有年份部分会添加超链接，设置 full_citation_hyperlink=True 可以让整个引用(作者+年份)都添加超链接
+        # 默认情况下，只有年份部分会添加超链接，设置 full_citation_hyperlink=True 可以让整个引用(作者+年份)都添加超链接 (请注意，该特性还在开发测试中，可能会产生意外的结果)
         # add_citation_cross_ref_hook(word, is_numbered=False, full_citation_hyperlink=True)
 
         # 通过设置 color 的值，可以设置整个引用的颜色(不包含括号)

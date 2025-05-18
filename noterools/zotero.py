@@ -1,9 +1,10 @@
 from typing import Optional
 
+import httpx
 from pyzotero.zotero import Zotero
 from pyzotero.zotero_errors import ResourceNotFoundError
 
-from .error import ZoteroNotInitError
+from .error import ZoteroNotInitError, ZoteroConnectError
 from .utils import logger
 
 ZOTERO_CLIENT: Optional[Zotero] = None
@@ -61,6 +62,9 @@ def zotero_query(item_id: str) -> dict:
         return ZOTERO_CLIENT.item(item_id, format="json")
     except ResourceNotFoundError:
         return {"data": {}}
+    except httpx.ConnectError:
+        logger.error(f"Can't communicate with Zotero.")
+        raise ZoteroConnectError(f"Can't communicate with Zotero.")
 
 
 def zotero_query_pages(item_id: str) -> str:
