@@ -14,7 +14,9 @@ Currently, noterools can help you do the following things:
 - Italicize journal names and publishers in the Zotero bibliography that aren't correctly formatted as italics.
 - Adjust the font color and weight for cross-references within the main text.
 - Replace the hyphen (-, Unicode 002D) used for page ranges in the bibliography with an en dash (–, Unicode 2013).
+- Add hyperlinks to the links in the bibliography and set the font colour and whether they are underlined or not
 - (Experimental Feature) Modify the capitalization style of English reference titles. Supports three styles: ALL CAPS, Title Case (Capitalize Each Word), and Sentence case (Capitalize first word only).
+- (Experimental Feature) Add hyperlinks to in-text citations in (Author, Date) format (by default, only Date is added).
 
 ## Screenshots
 
