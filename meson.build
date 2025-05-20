@@ -6,6 +6,6 @@ project(
     default_options: ['warning_level=2'],
 )
 
-py3 = import('python').find_installation(pure: false)
+py3 = import('python').find_installation(pure: true)
 
 subdir('noterools')

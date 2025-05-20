@@ -84,4 +84,21 @@ def zotero_query_pages(item_id: str) -> str:
         return ""
 
 
-__all__ = ["zotero_init_client", "zotero_query", "zotero_query_pages", "zotero_check_initialized"]
+def zotero_query_doi(item_id: str) -> str:
+    """
+    Query doi from the Zotero.
+
+    :param item_id: Zotero item ID.
+    :type item_id: str
+    :return: DOI link.
+    :rtype: str
+    """
+    item_info = zotero_query(item_id)["data"]
+
+    if "DOI" in item_info:
+        return item_info["DOI"]
+    else:
+        return ""
+
+
+__all__ = ["zotero_init_client", "zotero_query", "zotero_query_pages", "zotero_check_initialized", "zotero_init_client", "zotero_query_doi"]
