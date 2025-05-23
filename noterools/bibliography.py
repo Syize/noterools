@@ -199,7 +199,7 @@ def add_bib_loop_hook(word: Word) -> BibLoopHook:
 class BibPairCitationBibHook(ExtensionHookBase):
     def __init__(self):
         """
-        This extension hook can pair bibliography and CSL JSON, so other extension hooks can get corresponding article information of bibliography.
+        This extension hook trys to pair bibliography and CSL JSON, so other extension hooks can get corresponding article information of bibliography.
         """
         super().__init__(name="BibPairCitationBibHook")
         self._get_cls_json_hook = GetCSLJsonHook()
@@ -281,26 +281,61 @@ class BibBookmarkHook(ExtensionHookBase):
         self.is_numbered = is_numbered
         self.set_container_title_italic = set_container_title_italic
         self._fields_list = []
-        self._bib_pair_citation_bib_hook = BibPairCitationBibHook()
+        self._get_cls_json_hook = GetCSLJsonHook()
+        # self._bib_pair_citation_bib_hook = BibPairCitationBibHook()
 
-        _check_extension_hook_registered(self.name, self._bib_pair_citation_bib_hook)
+        _check_extension_hook_registered(self.name, self._get_cls_json_hook)
 
         # used to generate bookmark for numbered citation
         self._number_count = 1
 
-    def on_iterate(self, word: Word, word_range):
-        bib_text = word_range.Text
-        csl_json = self._bib_pair_citation_bib_hook.get_csl_json(bib_text)
+        # used to match the citation with bibliography.
+        self._item_info_list: Optional[list[tuple[str, str, str, str, str, str]]] = None
+        
+    def _get_bookmark_id_and_item_info(self, bib_text: str) -> tuple[str, tuple[str, str, str, str]]:
+        """
+        Get bookmark id and information about the article.
 
-        if csl_json is None:
-            # no csl json found, skip
-            return
-        
-        bib_item_id = csl_json.item_id
-        bib_container_title = csl_json.get_container_title()
-        bib_publisher = csl_json.get_publisher()
-        bib_language = csl_json.get_language(defaults="cn")
-        
+        :param bib_text: Text of the bibliography.
+        :type bib_text: str
+        :return: (bookmark_id, (title, container_title, publisher, language))
+        :rtype: tuple
+        """
+        if self._item_info_list is None:
+            csl_json_dict = self._get_cls_json_hook.get_csl_jsons()
+            # [("title", "container title", "first author name", "publisher", "language", "item id"), ...]
+            self._item_info_list = [
+                (
+                    csl_json.get_title(), csl_json.get_container_title(), csl_json.get_author_names(language=csl_json.get_language(defaults="cn"))[0],
+                    csl_json.get_publisher(), csl_json.get_language(defaults="cn"), item_id
+                ) for item_id, csl_json in csl_json_dict.items()
+            ]
+
+        bib_title = ""
+        bib_container_title = ""
+        bib_publisher = ""
+        bib_language = ""
+        bib_item_id = ""
+
+        for index, _tuple in enumerate(self._item_info_list):
+            _title, _container_title, _author, _publisher, _language, _item_id = _tuple
+
+            # we have to check following things to make sure this is the article we find for bibliography
+            # 1. bib text contains article's title.
+            # 2. bib text contains article's container title (container title will be `""` if your Zotero doesn't have information about it).
+            # 3. bib text contains the first author's name.
+            # 4. article's title must match the title in bib text perfectly.
+            if _title in bib_text and _container_title in bib_text and _author in bib_text and f"{_title} " not in bib_text:
+                bib_title = _title
+                bib_container_title = _container_title
+                bib_publisher = _publisher
+                bib_language = _language
+                bib_item_id = _item_id
+                self._item_info_list.pop(index)
+                break
+
+        article_info = (bib_title, bib_container_title, bib_publisher, bib_language)
+
         if self.is_numbered:
             bookmark_id = f"Ref_{self._number_count}"
             self._number_count += 1
@@ -308,6 +343,35 @@ class BibBookmarkHook(ExtensionHookBase):
         else:
             # item id is unique in Zotero
             bookmark_id = f"Ref_{bib_item_id}"
+
+        return bookmark_id, article_info
+
+    def on_iterate(self, word: Word, word_range):
+        bib_text = word_range.Text
+        bookmark_id, (bib_title, bib_container_title, bib_publisher, bib_language) = self._get_bookmark_id_and_item_info(bib_text)
+
+        if not self.is_numbered and bib_title == "":
+            logger.warning(f"Can't find the corresponding citation of bib: {bib_text}, do you really cite it?")
+            return
+
+        # csl_json = self._bib_pair_citation_bib_hook.get_csl_json(bib_text)
+
+        # if csl_json is None:
+        #     # no csl json found, skip
+        #     return
+        
+        # bib_item_id = csl_json.item_id
+        # bib_container_title = csl_json.get_container_title()
+        # bib_publisher = csl_json.get_publisher()
+        # bib_language = csl_json.get_language(defaults="cn")
+        
+        # if self.is_numbered:
+        #     bookmark_id = f"Ref_{self._number_count}"
+        #     self._number_count += 1
+        #
+        # else:
+        #     # item id is unique in Zotero
+        #     bookmark_id = f"Ref_{bib_item_id}"
 
         # set italic for Chinese container title
         if self.set_container_title_italic and "cn" in bib_language:
@@ -330,7 +394,8 @@ def add_bib_bookmark_hook(word: Word, is_numbered=False, set_container_title_ita
     :return: ``BibBookmarkHook`` instance.
     :rtype: BibBookmarkHook
     """
-    add_bib_pair_citation_bib_hook(word)
+    # add_bib_pair_citation_bib_hook(word)
+    add_get_csl_json_hook(word)
     bib_bookmark_hook = BibBookmarkHook(is_numbered, set_container_title_italic)
     bib_loop_hook = add_bib_loop_hook(word)
     bib_loop_hook.set_hook(bib_bookmark_hook)
@@ -354,22 +419,65 @@ class BibUpdateDashSymbolHook(ExtensionHookBase):
 
         self.font_family = font_family
         self._fields_list = []
-        self._bib_pair_citation_bib_hook = BibPairCitationBibHook()
+        self._get_cls_json_hook = GetCSLJsonHook()
+        # self._bib_pair_citation_bib_hook = BibPairCitationBibHook()
         self.hyphen = "-"
         self.en_dash = "–"
 
         # we need ``GetCSLJsonHook`` to be registered.
-        _check_extension_hook_registered(self.name, self._bib_pair_citation_bib_hook)
+        _check_extension_hook_registered(self.name, self._get_cls_json_hook)
+
+        # used to match the citation with bibliography.
+        self._item_info_list: Optional[list[tuple[str, str, str, str, str, str]]] = None
+
+    def _get_item_id(self, bib_text: str) -> str:
+        """
+        Get item id of the article.
+
+        :param bib_text: Text of the bibliography.
+        :type bib_text: str
+        :return: Item ID.
+        :rtype: str
+        """
+        if self._item_info_list is None:
+            csl_json_dict = self._get_cls_json_hook.get_csl_jsons()
+            # [("title", "container title", "first author name", "publisher", "language", "item id"), ...]
+            self._item_info_list = [
+                (
+                    csl_json.get_title(), csl_json.get_container_title(), csl_json.get_author_names(language=csl_json.get_language(defaults="cn"))[0],
+                    csl_json.get_publisher(), csl_json.get_language(defaults="cn"), item_id
+                ) for item_id, csl_json in csl_json_dict.items()
+            ]
+
+        item_id = ""
+
+        for index, _tuple in enumerate(self._item_info_list):
+            _title, _container_title, _author, _publisher, _language, _item_id = _tuple
+
+            # we have to check following things to make sure this is the article we find for bibliography
+            # 1. bib text contains article's title.
+            # 2. bib text contains article's container title (container title will be `""` if your Zotero doesn't have information about it).
+            # 3. bib text contains the first author's name.
+            # 4. article's title must match the title in bib text perfectly.
+            if _title in bib_text and _container_title in bib_text and _author in bib_text and f"{_title} " not in bib_text:
+                item_id = _item_id
+                self._item_info_list.pop(index)
+                break
+
+        return item_id
 
     def on_iterate(self, word: Word, word_range):
         _bib_text: str = word_range.Text
-        csl_json = self._bib_pair_citation_bib_hook.get_csl_json(_bib_text)
-
-        if csl_json is None:
-            return
-
-        item_id = csl_json.item_id
+        item_id = self._get_item_id(_bib_text)
         page_num_section_text = zotero_query_pages(item_id)
+
+        # csl_json = self._bib_pair_citation_bib_hook.get_csl_json(_bib_text)
+        #
+        # if csl_json is None:
+        #     return
+        #
+        # item_id = csl_json.item_id
+        # page_num_section_text = zotero_query_pages(item_id)
 
         if page_num_section_text == "":
             return
@@ -411,7 +519,8 @@ def add_update_dash_symbol_hook(word: Word, font_family="Times New Roman") -> Bi
     :return: ``BibUpdateDashSymbolHook`` instance.
     :rtype: BibUpdateDashSymbolHook
     """
-    add_bib_pair_citation_bib_hook(word)
+    # add_bib_pair_citation_bib_hook(word)
+    add_get_csl_json_hook(word)
     bib_update_dash_symbol_hook = BibUpdateDashSymbolHook(font_family)
     bib_loop_hook = add_bib_loop_hook(word)
     bib_loop_hook.set_hook(bib_update_dash_symbol_hook, low_priority=True)
@@ -434,10 +543,14 @@ class BibFormatTitleHook(ExtensionHookBase):
         :type word_list: list
         """
         super().__init__("BibFormatTitleHook")
-        self._bib_pair_citation_bib_hook = BibPairCitationBibHook()
+        self._get_cls_json_hook = GetCSLJsonHook()
+        # self._bib_pair_citation_bib_hook = BibPairCitationBibHook()
 
         # we need ``GetCSLJsonHook`` to be registered.
-        _check_extension_hook_registered(self.name, self._bib_pair_citation_bib_hook)
+        _check_extension_hook_registered(self.name, self._get_cls_json_hook)
+
+        # used to match the citation with bibliography.
+        self._item_info_list: Optional[list[tuple[str, str, str, str, str, str]]] = None
         
         if upper_all_words + upper_first_char + lower_all_words >= 2:
             logger.error(f"You must chose only one format rule for article's title.")
@@ -457,16 +570,56 @@ class BibFormatTitleHook(ExtensionHookBase):
 
         logger.warning("Change the capitalization of article title is an experimental feature and may make mistakes.")
         logger.warning("Use it carefully.")
+        
+    def _get_title(self, bib_text: str) -> tuple[str, str]:
+        """
+        Get the title and language of a bibliography.
+
+        :param bib_text: Text of the bibliography.
+        :type bib_text: str
+        :return: (title, language)
+        :rtype: tuple
+        """
+        if self._item_info_list is None:
+            csl_json_dict = self._get_cls_json_hook.get_csl_jsons()
+            # [("title", "container title", "first author name", "publisher", "language", "item id"), ...]
+            self._item_info_list = [
+                (
+                    csl_json.get_title(), csl_json.get_container_title(), csl_json.get_author_names(language=csl_json.get_language(defaults="cn"))[0],
+                    csl_json.get_publisher(), csl_json.get_language(defaults="cn"), item_id
+                ) for item_id, csl_json in csl_json_dict.items()
+            ]
+
+        bib_title = ""
+        bib_language = ""
+
+        for index, _tuple in enumerate(self._item_info_list):
+            _title, _container_title, _author, _publisher, _language, _item_id = _tuple
+
+            # we have to check following things to make sure this is the article we find for bibliography
+            # 1. bib text contains article's title.
+            # 2. bib text contains article's container title (container title will be `""` if your Zotero doesn't have information about it).
+            # 3. bib text contains the first author's name.
+            # 4. article's title must match the title in bib text perfectly.
+            if _title in bib_text and _container_title in bib_text and _author in bib_text and f"{_title} " not in bib_text:
+                bib_title = _title
+                bib_language = _language
+                self._item_info_list.pop(index)
+                break
+
+        return bib_title, bib_language
 
     def on_iterate(self, word: Word, word_range):
         bib_text = word_range.Text
-        csl_json = self._bib_pair_citation_bib_hook.get_csl_json(bib_text)
+        bib_title, bib_language = self._get_title(bib_text)
 
-        if csl_json is None:
-            return
-
-        bib_language = csl_json.get_language(defaults="cn")
-        bib_title = csl_json.get_title()
+        # csl_json = self._bib_pair_citation_bib_hook.get_csl_json(bib_text)
+        #
+        # if csl_json is None:
+        #     return
+        #
+        # bib_language = csl_json.get_language(defaults="cn")
+        # bib_title = csl_json.get_title()
 
         if bib_title != "" and bib_language == "en":
             if self.upper_all_words:
@@ -573,7 +726,8 @@ def add_format_title_hook(word: Word, upper_first_char=False, upper_all_words=Fa
     :return: ``BibFormatTitleHook`` instance.
     :rtype: BibFormatTitleHook
     """
-    add_bib_pair_citation_bib_hook(word)
+    # add_bib_pair_citation_bib_hook(word)
+    add_get_csl_json_hook(word)
     bib_format_title_hook = BibFormatTitleHook(upper_first_char, upper_all_words, lower_all_words, word_list)
     bib_loop_hook = add_bib_loop_hook(word)
     bib_loop_hook.set_hook(bib_format_title_hook, low_priority=True)
